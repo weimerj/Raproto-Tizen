@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<tproject xmlns="http://www.tizen.org/tproject">
+    <platforms>
+        <platform>
+            <name>wearable-4.0</name>
+        </platform>
+    </platforms>
+    <package>
+        <blacklist/>
+        <resFallback autoGen="true"/>
+        <subProjects>
+            <tizenProject project="RaprotoService"/>
+        </subProjects>
+    </package>
+</tproject>
