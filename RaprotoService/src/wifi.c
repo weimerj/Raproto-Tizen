@@ -138,7 +138,7 @@ wifi_start(app_data_s *ad) {
 	} else if (*wifi_mode == RAPROTO_WIFI_CONTROL_NONE) {
 		if ((err = wifi_manager_is_activated(ad->wifi, &active)) ==  WIFI_MANAGER_ERROR_NONE){
 			if (active){
-				if ((err = wifi_manager_get_connection_state(ad->wifi, &connection_state)) != WIFI_MANAGER_ERROR_NONE){
+				if ((err = wifi_manager_get_connection_state(ad->wifi, &connection_state)) != WIFI_MANAGER_ERROR_NONE) {
 					wifi_connected(connection_state, (void*)ad);
 				} else {
 					error_msg(err, __func__, "wifi_manager_get_connection_state");
