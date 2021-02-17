@@ -79,15 +79,7 @@ the PahoMQTT release for the target ARM Architecture.  There may be another way.
 	b) src/pahomqtt/test_package
 	c) src/pahomqtt/src/samples
 
-12) Create a VersionInfo.h file containing the following and save it in the "inc" directory:
-#ifndef VERSIONINFO_H
-#define VERSIONINFO_H
-
-#define BUILD_TIMESTAMP "@BUILD_TIMESTAMP@"
-#define CLIENT_VERSION  "@CLIENT_VERSION@"
-
-#endif /* VERSIONINFO_H */
-
+12) Copy the VersionInfo.h file (Raproto/VersionInfo.h) containing the following and save it in the "inc" directory of the Tizen project for the library.
 
 13) right click the library package name in the Tizen Studio Project Explorer (right panel), select "Build Project" (you may want to clean it first.)
 
