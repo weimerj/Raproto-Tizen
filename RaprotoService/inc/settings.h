@@ -147,7 +147,7 @@
 #define RAPROTO_TASK_REQUEST_ERROR						"ERROR"
 #define RAPROTO_TASK_REQUEST_FACTORY_RESET				"FACTORY_RESET"
 
-
+//TODO: Turn these into enums
 #define RAPROTO_TASK_NUMBER					4
 #define RAPROTO_TASK_NONE					-1
 #define RAPROTO_TASK_UPDATE					0

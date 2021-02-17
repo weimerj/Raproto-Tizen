@@ -126,13 +126,33 @@ wifi_start(app_data_s *ad) {
 	int *wifi_mode;
 	int *wifi_timeout;
 	size_t n_size;
+	bool active;
+	wifi_manager_connection_state_e connection_state;
 
 	if ((err = bundle_get_byte(ad->settings, RAPROTO_SETTING_WIFI, (void**)&wifi_mode, &n_size)) != BUNDLE_ERROR_NONE) error_msg(err, __func__, "wifi mode");
 	if ((err = bundle_get_byte(ad->settings, RAPROTO_SETTING_WIFI_TIMEOUT, (void**)&wifi_timeout, &n_size)) != BUNDLE_ERROR_NONE) error_msg(err, __func__, "wifi timeout");
 
 
-	if ((*wifi_mode == RAPROTO_WIFI_CONTROL_ON_ONLY) || (*wifi_mode == RAPROTO_WIFI_CONTROL_FULL))
+	if ((*wifi_mode == RAPROTO_WIFI_CONTROL_ON_ONLY) || (*wifi_mode == RAPROTO_WIFI_CONTROL_FULL)) {
 		wifi_autoconnect_start(&(ad->wifi_ac),(double)*wifi_timeout);
+	} else if (*wifi_mode == RAPROTO_WIFI_CONTROL_NONE) {
+		if ((err = wifi_manager_is_activated(ad->wifi, &active)) ==  WIFI_MANAGER_ERROR_NONE){
+			if (active){
+				if ((err = wifi_manager_get_connection_state(ad->wifi, &connection_state)) != WIFI_MANAGER_ERROR_NONE) {
+					wifi_connected(connection_state, (void*)ad);
+				} else {
+					error_msg(err, __func__, "wifi_manager_get_connection_state");
+				}
+			} else {
+				wifi_connected(WIFI_MANAGER_CONNECTION_STATE_DISCONNECTED, (void*)ad);
+			}
+		} else {
+			error_msg(err, __func__, "wifi is activated");
+		}
+	} else {
+		error_msg(WIFI_MANAGER_ERROR_OPERATION_ABORTED, __func__, "RAPROTO_WIFI_CONTROL error");
+	}
+
 
 	return;
 }

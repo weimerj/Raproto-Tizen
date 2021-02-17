@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<manifest xmlns="http://tizen.org/ns/packages" api-version="4.0" package="org.precise.raproto.service" version="0.0.1">
+<manifest xmlns="http://tizen.org/ns/packages" api-version="4.0" package="org.precise.raproto.service" version="0.1.0">
     <author email="weimerj@seas.upenn.edu">James Weimer</author>
     <profile name="wearable"/>
     <service-application appid="org.precise.raproto.service" exec="raprotoservice" multiple="false" nodisplay="true" taskmanage="false" type="capp">

@@ -3,6 +3,7 @@
 	<name>RaprotoService</name>
 	<comment></comment>
 	<projects>
+		<project>StaticLibrary</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>
