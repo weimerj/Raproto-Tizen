@@ -131,11 +131,10 @@ task_process(const char *event_name, bundle *junk, void *data){
 
 void
 task_start(app_data_s *ad){
-	int j;
 
 	if (ad->scheduler.active == RAPROTO_TASK_NONE) {
 
-		for (j = 0; j < RAPROTO_TASK_NUMBER; j++){
+		for (int j = 0; j < RAPROTO_TASK_NUMBER; j++){
 			if (ad->scheduler.tasks[j] == RAPROTO_TASK_SCHEDULE_ON){
 				dlog_print(DLOG_INFO, LOG_TAG, "Starting task: %d", j);
 				ad->scheduler.active = j;

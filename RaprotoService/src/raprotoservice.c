@@ -1756,6 +1756,8 @@ service_app_control(app_control_h request, void *data)
 		if ((err = app_control_get_extra_data(request, RAPROTO_TASK_REQUEST, &task)) != APP_CONTROL_ERROR_NONE) error_msg(err, __func__, "get extra data");
 		if (strcmp(task,RAPROTO_TASK_REQUEST_LOG_CHECK)) dlog_print(DLOG_INFO, LOG_TAG, "Scheduling task: %s", task);
 
+
+
 		if (!strcmp(task, RAPROTO_TASK_REQUEST_START)) {
 			config_publish(ad->settings);
 		} else if (!strcmp(task, RAPROTO_TASK_REQUEST_STOP)) {

@@ -8,6 +8,11 @@
 #ifndef SETTINGS_H_
 #define SETTINGS_H_
 
+#ifdef  LOG_TAG
+#undef  LOG_TAG
+#endif
+#define LOG_TAG "RaprotoService"
+
 #define RAPROTO_TASK_SCHEDULE_TASK				"event.org.precise.raproto.service.schedule_task"
 #define RAPROTO_TASK_START						"event.org.precise.raproto.service.task_start"
 
