@@ -136,23 +136,17 @@ wifi_start(app_data_s *ad) {
 	if ((*wifi_mode == RAPROTO_WIFI_CONTROL_ON_ONLY) || (*wifi_mode == RAPROTO_WIFI_CONTROL_FULL)) {
 		wifi_autoconnect_start(&(ad->wifi_ac),(double)*wifi_timeout);
 	} else if (*wifi_mode == RAPROTO_WIFI_CONTROL_NONE) {
-		if ((err = wifi_manager_is_activated(ad->wifi, &active)) ==  WIFI_MANAGER_ERROR_NONE){
-			if (active){
-				if ((err = wifi_manager_get_connection_state(ad->wifi, &connection_state)) != WIFI_MANAGER_ERROR_NONE) {
-					wifi_connected(connection_state, (void*)ad);
-				} else {
-					error_msg(err, __func__, "wifi_manager_get_connection_state");
-				}
-			} else {
-				wifi_connected(WIFI_MANAGER_CONNECTION_STATE_DISCONNECTED, (void*)ad);
-			}
-		} else {
-			error_msg(err, __func__, "wifi is activated");
-		}
+		if ((err = wifi_manager_is_activated(*(ad->wifi), &active)) !=  WIFI_MANAGER_ERROR_NONE) error_msg(err, __func__, "wifi_manager_is_activated");
+
+		if (!active) wifi_connected(WIFI_MANAGER_CONNECTION_STATE_DISCONNECTED, (void*)ad);
+
+		if ((err = wifi_manager_get_connection_state(*(ad->wifi), &connection_state)) != WIFI_MANAGER_ERROR_NONE) error_msg(err, __func__, "wifi_manager_get_connection_state");
+
+		wifi_connected(connection_state, (void*)ad);
+
 	} else {
 		error_msg(WIFI_MANAGER_ERROR_OPERATION_ABORTED, __func__, "RAPROTO_WIFI_CONTROL error");
 	}
-
 
 	return;
 }
