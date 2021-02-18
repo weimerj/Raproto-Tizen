@@ -42,10 +42,9 @@ WIFI:INT:{0,1,2} - WIFI configuration mode.  WIFI=0 never tries to connect/disco
 2.A) Clone the JSMN JSON parser: https://github.com/zserge/jsmn
 2.B) copy JSMN/inc/jsmn.h to Raproto/RaprotoService/inc/jsmn.h
 
-3.A) Download the PahoMQTT C library: https://github.com/eclipse/paho.mqtt.c/releases/tag/v1.3.8c
-3.B) Compile for the target ARM architecture linking with OPENSSL (see Cross Compiling for target below)
-3.C) Copy static library to Raproto/RaprotoService/lib 
-
+3.A) Download the pre-compiled PahoMQTT C library here: https://upenn.box.com/s/ofplyhi6ce2znrqb6k22n9sb2f8n6hh7
+3.B) Copy static library to Raproto/RaprotoService/lib 
+3.C) If you want to cross compile from source, follow instructions below.
 
 
 
@@ -53,6 +52,8 @@ WIFI:INT:{0,1,2} - WIFI configuration mode.  WIFI=0 never tries to connect/disco
 # Cross Compiling MQTT Paho for Target w/ OPENSSL Linking
 These instructions provide a (relatively) straight forward way to cross compile 
 the PahoMQTT release for the target ARM Architecture.  There may be another way.
+
+0) Download: https://github.com/eclipse/paho.mqtt.c/releases/tag/v1.3.8c
 
 1) Open Tizen Studio. File -> New -> Tizen Project.  Select "Template", then click next.
 

@@ -117,8 +117,6 @@ wifi_stop(app_data_s *ad){
 
 
 
-
-
 void
 wifi_start(app_data_s *ad) {
 
