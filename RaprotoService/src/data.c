@@ -9,7 +9,8 @@
 #include "data.h"
 
 void
-data_save(bundle *data, const char *filename){
+data_save(bundle *data, const char *filename, app_data_s *ad){
+	int err;
 
 	if (data == NULL){
 		return;
@@ -21,10 +22,13 @@ data_save(bundle *data, const char *filename){
 	sprintf(path,"%s%s\n",app_get_data_path(), filename);
 	FILE *fp = fopen(path, "wb");
 	if (fp != NULL) {
-		bundle_encode(data, &r, &len);
-		fwrite(r, 1, len, fp);
+		if ((err = bundle_encode(data, &r, &len)) != BUNDLE_ERROR_NONE) error_msg(err, __func__, "bundle encode");
+		if ((err = fwrite(r, 1, len, fp)) != len) error_msg(err, __func__, "fwrite error");
 		fclose(fp);
 		free(r);
+		if  ((len > 40000000) && (ad != NULL))
+			ad->scheduler.tasks[RAPROTO_TASK_STOP_SOFT] = RAPROTO_TASK_SCHEDULE_ON;
+
 		dlog_print(DLOG_INFO, LOG_TAG, "Saved Data: %d bytes, %s", len, path);
 	} else {
 		dlog_print(DLOG_ERROR, LOG_TAG, "fopen fail: %s", path);
@@ -36,7 +40,7 @@ Eina_Bool
 data_autosave(void *data){
 	app_data_s* ad = (app_data_s*)data;
 	log_message_pack_all(ad,0);
-	data_save(ad->data.messages, RAPROTO_DATA_FILENAME);
+	data_save(ad->data.messages, RAPROTO_DATA_FILENAME, ad);
 	return ECORE_CALLBACK_RENEW;
 }
 
@@ -79,7 +83,7 @@ data_load_settings(){
 		fclose(fp);
 	} else {
 		settings = settings_init();
-		data_save(settings, RAPROTO_SETTING_FILENAME);
+		data_save(settings, RAPROTO_SETTING_FILENAME, NULL);
 		dlog_print(DLOG_INFO, LOG_TAG, "No Saved Configuration: %s", path);
 	}
 
