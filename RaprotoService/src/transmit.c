@@ -107,7 +107,7 @@ void
 transmit_data_setup(app_data_s *ad){
 	data_setup(ad);
 	log_message_pack_all(ad, 0);
-	data_save(ad->data.messages, RAPROTO_DATA_FILENAME); // save before trying to transmit (just in case)
+	data_save(ad->data.messages, RAPROTO_DATA_FILENAME, ad); // save before trying to transmit (just in case)
 	task_process_cb(RAPROTO_TASK_TRANSMIT_SETUP_DONE);
 	return;
 }

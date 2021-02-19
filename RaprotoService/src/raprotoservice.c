@@ -1651,10 +1651,10 @@ service_app_terminate(void *data)
     if (!(ad->reset)) {
     		// Store all non-transmitted data
     		log_message_pack_all(ad,0);
-    		data_save(ad->data.messages, RAPROTO_DATA_FILENAME);
+    		data_save(ad->data.messages, RAPROTO_DATA_FILENAME, NULL);
 
     		// Save all settings
-    		data_save(ad->settings, RAPROTO_SETTING_FILENAME);
+    		data_save(ad->settings, RAPROTO_SETTING_FILENAME, NULL);
     } else {
 
 		char path[MAX_FILE_PATH];
@@ -1823,14 +1823,14 @@ service_app_region_changed(app_event_info_h event_info, void *data)
 static void
 service_app_low_battery(app_event_info_h event_info, void *data)
 {
-	dlog_print(DLOG_INFO, LOG_TAG, "Low battery called");
+	dlog_print(DLOG_ERROR, LOG_TAG, "Low battery called");
 	/*APP_EVENT_LOW_BATTERY*/
 }
 
 static void
 service_app_low_memory(app_event_info_h event_info, void *data)
 {
-	dlog_print(DLOG_INFO, LOG_TAG, "Low memory called");
+	dlog_print(DLOG_ERROR, LOG_TAG, "Low memory called");
 	/*APP_EVENT_LOW_MEMORY*/
 }
 

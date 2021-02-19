@@ -19,7 +19,7 @@
 
 
 
-void data_save(bundle *data, const char *filename);
+void data_save(bundle *data, const char *filename, app_data_s *ad);
 Eina_Bool data_autosave(void *data);
 void data_load_user(char *key, app_control_h app, app_data_s *ad) ;
 bundle* data_load_settings(void);

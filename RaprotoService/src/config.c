@@ -172,7 +172,7 @@ config_received(app_data_s *ad,  char *payload, int payloadLen) {
 	// Store the latest settings
 	bundle_free(ad->settings);
 	ad->settings = settings;
-	data_save(ad->settings, RAPROTO_SETTING_FILENAME);
+	data_save(ad->settings, RAPROTO_SETTING_FILENAME, NULL);
 
 	config_publish(ad->settings);
 	dlog_print(DLOG_INFO, LOG_TAG, "parsed configuration");
