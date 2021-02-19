@@ -22,7 +22,10 @@ struct sys_queue{
 	sys_data_s data[QUEUE_SIZE_SYSTEM];
 } sys_queue_s = {{"system info",0,0,QUEUE_SIZE_SYSTEM},};
 
-
+//struct hr_queue{
+//	queue_state_s state;
+//
+//} hr_queue = {{"system info",0,0,QUEUE_SIZE_SYSTEM},};
 
 void
 log_message_pack_all(app_data_s *ad, int attempt) {
@@ -163,22 +166,24 @@ log_sensor_system(void *data){
 	char *device_id;
 	int err;
 	int battery_percent;
-	struct timeval t;
+	struct timespec ts;
+    long ms; // Milliseconds
+    time_t s;  // Seconds
 	char msg[RAPROTO_MAX_MESSAGE_SIZE];
 
 	if (monitor_heart_beat(RAPROTO_SENSOR_BATTERY,ad)) {
 		if ((err = bundle_get_str(ad->settings, RAPROTO_SETTING_DEVICE_ID, &device_id)) != BUNDLE_ERROR_NONE) error_msg(err, __func__, "device id");
 
-		//TODO: gettimeofday is obsolete -- NEED TO FIX
-		gettimeofday(&t, NULL);
-
 		if ((err = device_battery_get_percent(&battery_percent)) != DEVICE_ERROR_NONE) error_msg(err, __func__, "get percentage");
 
-		sprintf(msg, "{\"ts\": \"%ld%ld\",\"values\"={\"%s_SYS\":{\"Bat\":%d}}}",
-			t.tv_sec,
-			t.tv_usec/1000,
-			device_id,
-			battery_percent);
+		clock_gettime(CLOCK_REALTIME, &ts);
+		s  = ts.tv_sec;
+		ms = round(ts.tv_nsec / 1.0e6); // Convert nanoseconds to milliseconds
+		if (ms > 999) {
+			s++;
+			ms = 0;
+		}
+		sprintf(msg, "{\"ts\": \"%ld%ld\",\"values\"={\"%s_SYS\":{\"Bat\":%d}}}", s, ms, device_id, battery_percent);
 
 		log_message_pack(ad, msg, 0);
 
@@ -198,22 +203,29 @@ log_sensor_accelerometer(sensor_h sensor, sensor_event_s *event, void *data)
 {
 	app_data_s *ad = (app_data_s*)data;
 	char *device_id;
-	struct timeval t;
+	struct timespec ts;
+    long ms; // Milliseconds
+    time_t s;  // Seconds
 	char msg[RAPROTO_MAX_MESSAGE_SIZE];
 	int err;
 
 	if (monitor_heart_beat(RAPROTO_SENSOR_ACC, ad)) {
 		if ((err = bundle_get_str(ad->settings, RAPROTO_SETTING_DEVICE_ID, &device_id)) != BUNDLE_ERROR_NONE) error_msg(err, __func__, "device id");
 
-		//TODO: gettimeofday is obsolete -- NEED TO FIX
-		gettimeofday(&t, NULL);
+		clock_gettime(CLOCK_REALTIME, &ts);
+		s  = ts.tv_sec;
+		ms = round(ts.tv_nsec / 1.0e6); // Convert nanoseconds to milliseconds
+		if (ms > 999) {
+			s++;
+			ms = 0;
+		}
 
 	    sensor_type_e type = SENSOR_ALL;
 	    if((sensor_get_type(sensor, &type) == SENSOR_ERROR_NONE) && type == SENSOR_ACCELEROMETER)
 	    {
 	    		sprintf(msg, "{\"ts\": \"%ld%ld\",\"values\"={\"%s_ACC\":{\"x\":%.2f,\"y\":%.2f,\"z\":%.2f}}}",
-	    			t.tv_sec,
-	    			t.tv_usec/1000,
+	    			s,
+	    			ms,
 	    			device_id,
 				event->values[0],
 				event->values[1],
