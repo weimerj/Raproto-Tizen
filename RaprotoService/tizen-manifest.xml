@@ -10,6 +10,7 @@
     </service-application>
     <privileges>
         <privilege>http://tizen.org/privilege/network.get</privilege>
+        <privilege>http://tizen.org/privilege/healthinfo</privilege>
         <privilege>http://tizen.org/privilege/appmanager.launch</privilege>
         <privilege>http://tizen.org/privilege/network.set</privilege>
         <privilege>http://tizen.org/privilege/internet</privilege>

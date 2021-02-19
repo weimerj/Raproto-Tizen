@@ -10,22 +10,22 @@
 #include "log.h"
 
 
+static unsigned long long
+log_gettime(){
 
-struct acc_queue{
-	queue_state_s state;
-	acc_data_s data[QUEUE_SIZE_ACCELEROMETER];
-} acc_queue_s = {{"accelerometer",0,0,QUEUE_SIZE_ACCELEROMETER},};
+	struct timespec ts;
+    unsigned long long ms1970; // Milliseconds since Jan 1, 1970
+
+	clock_gettime(CLOCK_REALTIME, &ts);
+	ms1970 = ts.tv_sec;
+	ms1970 = (ms1970 * 1000) + round(ts.tv_nsec / 1.0e6);
+
+	return ms1970;
+
+}
 
 
-struct sys_queue{
-	queue_state_s state;
-	sys_data_s data[QUEUE_SIZE_SYSTEM];
-} sys_queue_s = {{"system info",0,0,QUEUE_SIZE_SYSTEM},};
 
-//struct hr_queue{
-//	queue_state_s state;
-//
-//} hr_queue = {{"system info",0,0,QUEUE_SIZE_SYSTEM},};
 
 void
 log_message_pack_all(app_data_s *ad, int attempt) {
@@ -166,9 +166,6 @@ log_sensor_system(void *data){
 	char *device_id;
 	int err;
 	int battery_percent;
-	struct timespec ts;
-    long ms; // Milliseconds
-    time_t s;  // Seconds
 	char msg[RAPROTO_MAX_MESSAGE_SIZE];
 
 	if (monitor_heart_beat(RAPROTO_SENSOR_BATTERY,ad)) {
@@ -176,14 +173,7 @@ log_sensor_system(void *data){
 
 		if ((err = device_battery_get_percent(&battery_percent)) != DEVICE_ERROR_NONE) error_msg(err, __func__, "get percentage");
 
-		clock_gettime(CLOCK_REALTIME, &ts);
-		s  = ts.tv_sec;
-		ms = round(ts.tv_nsec / 1.0e6); // Convert nanoseconds to milliseconds
-		if (ms > 999) {
-			s++;
-			ms = 0;
-		}
-		sprintf(msg, "{\"ts\": \"%ld%ld\",\"values\"={\"%s_SYS\":{\"Bat\":%d}}}", s, ms, device_id, battery_percent);
+		sprintf(msg, "{\"ts\": \"%llu\",\"values\"={\"%s_SYS\":{\"Bat\":%d}}}", log_gettime(), device_id, battery_percent);
 
 		log_message_pack(ad, msg, 0);
 
@@ -203,33 +193,48 @@ log_sensor_accelerometer(sensor_h sensor, sensor_event_s *event, void *data)
 {
 	app_data_s *ad = (app_data_s*)data;
 	char *device_id;
-	struct timespec ts;
-    long ms; // Milliseconds
-    time_t s;  // Seconds
 	char msg[RAPROTO_MAX_MESSAGE_SIZE];
 	int err;
 
 	if (monitor_heart_beat(RAPROTO_SENSOR_ACC, ad)) {
 		if ((err = bundle_get_str(ad->settings, RAPROTO_SETTING_DEVICE_ID, &device_id)) != BUNDLE_ERROR_NONE) error_msg(err, __func__, "device id");
 
-		clock_gettime(CLOCK_REALTIME, &ts);
-		s  = ts.tv_sec;
-		ms = round(ts.tv_nsec / 1.0e6); // Convert nanoseconds to milliseconds
-		if (ms > 999) {
-			s++;
-			ms = 0;
-		}
-
 	    sensor_type_e type = SENSOR_ALL;
 	    if((sensor_get_type(sensor, &type) == SENSOR_ERROR_NONE) && type == SENSOR_ACCELEROMETER)
 	    {
-	    		sprintf(msg, "{\"ts\": \"%ld%ld\",\"values\"={\"%s_ACC\":{\"x\":%.2f,\"y\":%.2f,\"z\":%.2f}}}",
-	    			s,
-	    			ms,
+	    		sprintf(msg, "{\"ts\": \"%llu\",\"values\"={\"%s_ACC\":{\"x\":%.2f,\"y\":%.2f,\"z\":%.2f}}}",
+	    			log_gettime(),
 	    			device_id,
 				event->values[0],
 				event->values[1],
 				event->values[2]);
+	    }
+
+	    log_message_pack(ad, msg, 0);
+	}
+}
+
+
+
+
+static void
+log_sensor_heart_rate_monitor(sensor_h sensor, sensor_event_s *event, void *data)
+{
+	app_data_s *ad = (app_data_s*)data;
+	char *device_id;
+	char msg[RAPROTO_MAX_MESSAGE_SIZE];
+	int err;
+
+	if (monitor_heart_beat(RAPROTO_SENSOR_HRM, ad)) {
+		if ((err = bundle_get_str(ad->settings, RAPROTO_SETTING_DEVICE_ID, &device_id)) != BUNDLE_ERROR_NONE) error_msg(err, __func__, "device id");
+
+	    sensor_type_e type = SENSOR_ALL;
+	    if((sensor_get_type(sensor, &type) == SENSOR_ERROR_NONE) && (type == SENSOR_HRM))
+	    {
+	    		sprintf(msg, "{\"ts\": \"%lld\",\"values\"={\"%s_HRM\":{\"hrm\":%d}}}",
+	    			log_gettime(),
+	    			device_id,
+				(int)event->values[0]);
 	    }
 
 	    log_message_pack(ad, msg, 0);
@@ -251,26 +256,37 @@ log_sensor_setup(int idx, sensor_type_e type, const char *key, sensor_event_cb c
 	if (sensor_supported){
 
 		int *log_period;
-		size_t acc_log_period_size;
-		if ((err = bundle_get_byte(ad->settings, key, (void**)&log_period, &acc_log_period_size)) != BUNDLE_ERROR_NONE) error_msg(err, __func__, "get key");
+		size_t log_period_size;
+		if ((err = bundle_get_byte(ad->settings, key, (void**)&log_period, &log_period_size)) != BUNDLE_ERROR_NONE) error_msg(err, __func__, "get key");
 
 		if (*log_period > 0) {
 
 			unsigned int pos_log = *log_period; // need unsigned for the log period
-			if (sensor_get_default_sensor(type, &(ad->sensors[idx].sensor)) == SENSOR_ERROR_NONE) {
-			   if (sensor_create_listener(ad->sensors[idx].sensor, &(ad->sensors[idx].listener)) == SENSOR_ERROR_NONE
-				   && sensor_listener_set_event_cb(ad->sensors[idx].listener, pos_log, callback, ad) == SENSOR_ERROR_NONE
-				   && sensor_listener_set_option(ad->sensors[idx].listener, SENSOR_OPTION_ALWAYS_ON) == SENSOR_ERROR_NONE
-				   && sensor_listener_set_attribute_int(ad->sensors[idx].listener, SENSOR_ATTRIBUTE_AXIS_ORIENTATION, SENSOR_AXIS_DEVICE_ORIENTED) == SENSOR_ERROR_NONE
-				   && sensor_listener_set_attribute_int(ad->sensors[idx].listener, SENSOR_ATTRIBUTE_PAUSE_POLICY, SENSOR_PAUSE_NONE) == SENSOR_ERROR_NONE)
-			   {
-				   if ((err = sensor_listener_start(ad->sensors[idx].listener)) != SENSOR_ERROR_NONE) error_msg(err, __func__, "listener start");
-			   } else{
-				   error_msg(err, __func__, "starting sensor");
-			   }
-			} else {
-				error_msg(err, __func__, "sensor default");
-			}
+
+			if ((err = sensor_get_default_sensor(type, &(ad->sensors[idx].sensor))) != SENSOR_ERROR_NONE) return error_msg(err, __func__, "sensor_get_default_sensor");
+			if ((err = sensor_create_listener(ad->sensors[idx].sensor, &(ad->sensors[idx].listener))) != SENSOR_ERROR_NONE) return error_msg(err, __func__, "sensor_create_listener");
+			if ((err = sensor_listener_set_event_cb(ad->sensors[idx].listener, pos_log, callback, ad)) != SENSOR_ERROR_NONE) return error_msg(err, __func__, "sensor_listener_set_event_cb");
+			if ((err = sensor_listener_set_option(ad->sensors[idx].listener, SENSOR_OPTION_ALWAYS_ON)) != SENSOR_ERROR_NONE) return error_msg(err, __func__, "sensor_listener_set_option");
+			if ((err = sensor_listener_set_attribute_int(ad->sensors[idx].listener, SENSOR_ATTRIBUTE_AXIS_ORIENTATION, SENSOR_AXIS_DEVICE_ORIENTED)) != SENSOR_ERROR_NONE) return error_msg(err, __func__, "sensor_listener_set_attribute_int 1");
+			if ((err = sensor_listener_set_attribute_int(ad->sensors[idx].listener, SENSOR_ATTRIBUTE_PAUSE_POLICY, SENSOR_PAUSE_NONE)) != SENSOR_ERROR_NONE) return error_msg(err, __func__, "sensor_listener_set_attribute_int 2");
+			if ((err = sensor_listener_start(ad->sensors[idx].listener)) != SENSOR_ERROR_NONE) return error_msg(err, __func__, "listener start");
+
+
+
+//			if (sensor_get_default_sensor(type, &(ad->sensors[idx].sensor)) == SENSOR_ERROR_NONE) {
+//			   if (sensor_create_listener(ad->sensors[idx].sensor, &(ad->sensors[idx].listener)) == SENSOR_ERROR_NONE
+//				   && sensor_listener_set_event_cb(ad->sensors[idx].listener, pos_log, callback, ad) == SENSOR_ERROR_NONE
+//				   && sensor_listener_set_option(ad->sensors[idx].listener, SENSOR_OPTION_ALWAYS_ON) == SENSOR_ERROR_NONE
+//				   && sensor_listener_set_attribute_int(ad->sensors[idx].listener, SENSOR_ATTRIBUTE_AXIS_ORIENTATION, SENSOR_AXIS_DEVICE_ORIENTED) == SENSOR_ERROR_NONE
+//				   && sensor_listener_set_attribute_int(ad->sensors[idx].listener, SENSOR_ATTRIBUTE_PAUSE_POLICY, SENSOR_PAUSE_NONE) == SENSOR_ERROR_NONE)
+//			   {
+//				   if ((err = sensor_listener_start(ad->sensors[idx].listener)) != SENSOR_ERROR_NONE) error_msg(err, __func__, "listener start");
+//			   } else{
+//				   error_msg(err, __func__, "starting sensor");
+//			   }
+//			} else {
+//				error_msg(err, __func__, "sensor default");
+//			}
 
 			switch (mode){
 			case (0):
@@ -327,6 +343,7 @@ log_start(app_data_s *ad){
 	// Setup sensors
 	//TODO: add the other sensors
 	log_sensor_setup(RAPROTO_SENSOR_ACC, SENSOR_ACCELEROMETER, RAPROTO_SETTING_SENSOR_ACC, log_sensor_accelerometer, 0, ad);
+	log_sensor_setup(RAPROTO_SENSOR_HRM, SENSOR_HRM, RAPROTO_SETTING_SENSOR_HRM, log_sensor_heart_rate_monitor, 1, ad);
 
 
 	//if ((err = device_display_set_brightness(0,1)) != DEVICE_ERROR_NONE) error_msg(err, __func__, "brightness");

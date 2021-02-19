@@ -128,7 +128,7 @@
 
 
 #define RAPROTO_SETTING_SENSOR_ACC			"ACC"
-#define RAPROTO_SETTING_SENSOR_HR			"HR"
+#define RAPROTO_SETTING_SENSOR_HRM			"HRM"
 #define RAPROTO_SETTING_SENSOR_PPG			"PPG"
 #define RAPROTO_SETTING_SENSOR_TEMP			"TEMP"
 #define RAPROTO_SETTING_SENSOR_SLEEP			"SLEEP"
@@ -175,11 +175,14 @@
 #define RAPROTO_SENSOR_AUTOTRANSMIT			1
 #define RAPROTO_SENSOR_BATTERY				2
 #define RAPROTO_SENSOR_ACC					3
+#define RAPROTO_SENSOR_HRM					4
 
-
-#define QUEUE_SIZE_ACCELEROMETER				2592000 // 24 hours * 60 min/hour * 60 min/sec * 30 Hz (max)
-#define QUEUE_SIZE_SYSTEM 					1440 // 24 hours * 60 min/hour
-#define QUEUE_SIZE_MESSAGES					10000 // no clue why I picked this number.
+//TODO: Remove SAVE_RATE from API -- setup to save every minute -- non-configurable
+//TODO: Remove Battery from API -- setup to save every minute -- non-configurable
+#define QUEUE_SIZE_MESSAGES					10000 // 10k chosen for server side MQTT management -- could be larger.
+#define QUEUE_SIZE_SYSTEM 					120 // 1 Hz (max) * 60 min/sec * 2 for worst case
+#define QUEUE_SIZE_ACCELEROMETER				3600 // 30 Hz (max) * 60 min/sec *  2 for worst case
+#define QUEUE_SIZE_HEART_RATE_MONITOR		120 // 1 Hz (max) * 60 min/sec * 2 for worst case
 
 #define ERROR_MESSAGE						"MSG"
 

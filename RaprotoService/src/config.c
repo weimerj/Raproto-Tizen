@@ -109,7 +109,7 @@ config_get_settings_from_json(bundle *settings, char *s){
 		else if ((rc = config_is_valid_setting(RAPROTO_SETTING_WIFI_TIMEOUT, JSMN_PRIMITIVE, &t[n], s)) == RAPROTO_ERROR_NONE) config_get_setting_for_key(settings, &t[n], s);
 		else if ((rc = config_is_valid_setting(RAPROTO_SETTING_HEART_BEAT, JSMN_PRIMITIVE, &t[n], s)) == RAPROTO_ERROR_NONE) config_get_setting_for_key(settings, &t[n], s);
 		else if ((rc = config_is_valid_setting(RAPROTO_SETTING_SENSOR_ACC, JSMN_PRIMITIVE, &t[n], s)) == RAPROTO_ERROR_NONE) config_get_setting_for_key(settings, &t[n], s);
-		else if ((rc = config_is_valid_setting(RAPROTO_SETTING_SENSOR_HR, JSMN_PRIMITIVE, &t[n], s)) == RAPROTO_ERROR_NONE) config_get_setting_for_key(settings, &t[n], s);
+		else if ((rc = config_is_valid_setting(RAPROTO_SETTING_SENSOR_HRM, JSMN_PRIMITIVE, &t[n], s)) == RAPROTO_ERROR_NONE) config_get_setting_for_key(settings, &t[n], s);
 		else if ((rc = config_is_valid_setting(RAPROTO_SETTING_SENSOR_PPG, JSMN_PRIMITIVE, &t[n], s)) == RAPROTO_ERROR_NONE) config_get_setting_for_key(settings, &t[n], s);
 		else if ((rc = config_is_valid_setting(RAPROTO_SETTING_SENSOR_TEMP, JSMN_PRIMITIVE, &t[n], s)) == RAPROTO_ERROR_NONE) config_get_setting_for_key(settings, &t[n], s);
 		else if ((rc = config_is_valid_setting(RAPROTO_SETTING_SENSOR_SLEEP, JSMN_PRIMITIVE, &t[n], s)) == RAPROTO_ERROR_NONE) config_get_setting_for_key(settings, &t[n], s);
