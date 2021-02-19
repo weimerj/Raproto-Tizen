@@ -16,7 +16,6 @@
 
 
 
-
 typedef struct queue_state{
 	char *name;
 	int idx_start;
@@ -25,32 +24,7 @@ typedef struct queue_state{
 } queue_state_s;
 
 
-typedef struct acc_data{
-	struct timeval t;  // time
-	float x; // x-value
-	float y; // y-value
-	float z; // z-value
-} acc_data_s;
-
-
-
-typedef struct sys_data{
-	struct timeval t; // time
-	int battery; // battery
-} sys_data_s;
-
-
-typedef struct stored_message_data{
-	bundle *data;
-	queue_state_s state;
-	int enabled;
-} stored_message_data_s;
-
-
-
 typedef int (*mqtt_payload_create)(void *, char *, int);
-
-
 
 
 typedef struct mqtt_message_data{

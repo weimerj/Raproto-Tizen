@@ -63,7 +63,7 @@ settings_init(){
 
 	val = RAPROTO_SETTING_SENSOR_GENERIC_DEFAULT;
 	bundle_add_byte(settings, RAPROTO_SETTING_SENSOR_ACC, &val, sizeof(int));
-	bundle_add_byte(settings, RAPROTO_SETTING_SENSOR_HR, &val, sizeof(int));
+	bundle_add_byte(settings, RAPROTO_SETTING_SENSOR_HRM, &val, sizeof(int));
 	bundle_add_byte(settings, RAPROTO_SETTING_SENSOR_PPG, &val, sizeof(int));
 	bundle_add_byte(settings, RAPROTO_SETTING_SENSOR_TEMP, &val, sizeof(int));
 	bundle_add_byte(settings, RAPROTO_SETTING_SENSOR_SLEEP, &val, sizeof(int));
@@ -90,7 +90,7 @@ settings_init(){
 		RAPROTO_SETTING_MQTT_TIMEOUT,
 		RAPROTO_SETTING_MQTT_MAX_PAYLOAD_SIZE,
 		RAPROTO_SETTING_SENSOR_ACC,
-		RAPROTO_SETTING_SENSOR_HR,
+		RAPROTO_SETTING_SENSOR_HRM,
 		RAPROTO_SETTING_SENSOR_PPG,
 		RAPROTO_SETTING_SENSOR_TEMP,
 		RAPROTO_SETTING_SENSOR_SLEEP,
