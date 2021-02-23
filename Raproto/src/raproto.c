@@ -1,7 +1,6 @@
 #include <raproto.h>
 
 
-
 static bool
 app_create(void *data) {
 	app_data_s *ad = (app_data_s*)data;

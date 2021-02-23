@@ -5,6 +5,9 @@
  *      Author: weimer
  */
 
+
+//#define RELEASE_NEURALERT
+
 #ifndef SETTINGS_H_
 #define SETTINGS_H_
 
@@ -101,14 +104,13 @@
 
 
 // DEFAULT VALUES
-#define RAPROTO_SETTING_NAME_DEFAULT							"\0"
+
 #define RAPROTO_SETTING_TX_RATE_DEFAULT						60
 #define RAPROTO_SETTING_SAVE_RATE_DEFAULT					60
 #define RAPROTO_SETTING_POWER_DEFAULT						0
 #define RAPROTO_SETTING_WIFI_DEFAULT							1
 #define RAPROTO_SETTING_WIFI_TIMEOUT_DEFAULT					10
 #define RAPROTO_SETTING_MQTT_CLIENT_ID_DEFAULT 				"Raproto"
-#define RAPROTO_SETTING_MQTT_BROKER_DEFAULT					"ssl://tb.precise.seas.upenn.edu:8883"
 #define RAPROTO_SETTING_MQTT_QOS_DEFAULT						1
 #define RAPROTO_SETTING_MQTT_KEEP_ALIVE_DEFAULT				30
 #define RAPROTO_SETTING_MQTT_CONFIG_SUB_TOPIC_DEFAULT		"v1/devices/me/attributes/response/+"
@@ -126,6 +128,13 @@
 #define RAPROTO_SETTING_LOGGING								"SERVICE_LOGGING"
 #define RAPROTO_SETTING_ERROR								"SERVICE_ERROR"
 
+#ifdef RELEASE_NEURALERT
+	#define RAPROTO_SETTING_MQTT_BROKER_DEFAULT					"ssl://thingsboard.neuralerttechnologies.com:8883"
+	#define RAPROTO_SETTING_NAME_DEFAULT							"Neuralert"
+#else
+	#define RAPROTO_SETTING_MQTT_BROKER_DEFAULT					"ssl://tb.precise.seas.upenn.edu:8883"
+	#define RAPROTO_SETTING_NAME_DEFAULT							"\0"
+#endif
 
 #define RAPROTO_SETTING_SENSOR_ACC			"ACC"
 #define RAPROTO_SETTING_SENSOR_HRM			"HRM"
