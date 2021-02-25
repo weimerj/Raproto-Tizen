@@ -4,7 +4,7 @@
     <profile name="wearable"/>
     <ui-application appid="org.precise.raproto.ui" exec="raproto" multiple="false" nodisplay="false" taskmanage="true" type="capp">
         <label>Raproto</label>
-        <icon>raproto.png</icon>
+        <icon>RaprotoCircle - BlackSilver.png</icon>
     </ui-application>
     <privileges>
         <privilege>http://tizen.org/privilege/appmanager.launch</privilege>
