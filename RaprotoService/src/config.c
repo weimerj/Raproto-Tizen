@@ -96,6 +96,7 @@ config_get_settings_from_json(bundle *settings, char *s){
 		//dlog_print(DLOG_INFO, LOG_TAG, "token %d: %d, %d, %d, %d",n, t[n].type, t[n].start, t[n].end, t[n].size);
 
 		if ((rc = config_is_valid_setting(RAPROTO_SETTING_NAME, JSMN_STRING, &t[n], s)) == RAPROTO_ERROR_NONE) config_get_setting_for_key(settings, &t[n], s);
+		else if ((rc = config_is_valid_setting(RAPROTO_SETTING_MQTT_BROKER, JSMN_STRING, &t[n], s)) == RAPROTO_ERROR_NONE) config_get_setting_for_key(settings, &t[n], s);
 		else if ((rc = config_is_valid_setting(RAPROTO_SETTING_MQTT_PUB_TOPIC, JSMN_STRING, &t[n], s)) == RAPROTO_ERROR_NONE) config_get_setting_for_key(settings, &t[n], s);
 		else if ((rc = config_is_valid_setting(RAPROTO_SETTING_MQTT_QOS, JSMN_PRIMITIVE, &t[n], s)) == RAPROTO_ERROR_NONE) config_get_setting_for_key(settings, &t[n], s);
 		else if ((rc = config_is_valid_setting(RAPROTO_SETTING_MQTT_KEEP_ALIVE, JSMN_PRIMITIVE, &t[n], s)) == RAPROTO_ERROR_NONE) config_get_setting_for_key(settings, &t[n], s);

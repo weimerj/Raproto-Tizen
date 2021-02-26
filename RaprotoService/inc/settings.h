@@ -128,13 +128,13 @@
 #define RAPROTO_SETTING_LOGGING								"SERVICE_LOGGING"
 #define RAPROTO_SETTING_ERROR								"SERVICE_ERROR"
 
-#ifdef RELEASE_NEURALERT
-	#define RAPROTO_SETTING_MQTT_BROKER_DEFAULT					"ssl://thingsboard.neuralerttechnologies.com:8883"
-	#define RAPROTO_SETTING_NAME_DEFAULT							"Neuralert"
-#else
+//#ifdef RELEASE_NEURALERT
+//	#define RAPROTO_SETTING_MQTT_BROKER_DEFAULT					"ssl://thingsboard.neuralerttechnologies.com:1883"
+//	#define RAPROTO_SETTING_NAME_DEFAULT							"Neuralert"
+//#else
 	#define RAPROTO_SETTING_MQTT_BROKER_DEFAULT					"ssl://tb.precise.seas.upenn.edu:8883"
 	#define RAPROTO_SETTING_NAME_DEFAULT							"\0"
-#endif
+//#endif
 
 #define RAPROTO_SETTING_SENSOR_ACC			"ACC"
 #define RAPROTO_SETTING_SENSOR_HRM			"HRM"

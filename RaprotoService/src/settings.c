@@ -79,10 +79,11 @@ settings_init(){
 	bundle_add_str(settings, RAPROTO_SETTING_MQTT_CLIENT_ID, RAPROTO_SETTING_MQTT_CLIENT_ID_DEFAULT);
 
 	char str[1000];
-	sprintf(str,"{\"sharedKeys\":\"%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\"}",
+	sprintf(str,"{\"sharedKeys\":\"%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\"}",
 		RAPROTO_SETTING_NAME,
 		RAPROTO_SETTING_POWER,
 		RAPROTO_SETTING_WIFI,
+		RAPROTO_SETTING_MQTT_BROKER,
 		RAPROTO_SETTING_WIFI_TIMEOUT,
 		RAPROTO_SETTING_MQTT_PUB_TOPIC,
 		RAPROTO_SETTING_MQTT_QOS,
