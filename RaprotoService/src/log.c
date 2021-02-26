@@ -262,37 +262,14 @@ log_sensor_setup(int idx, sensor_type_e type, const char *key, sensor_event_cb c
 		if (*log_period > 0) {
 
 			unsigned int pos_log = *log_period; // need unsigned for the log period
+			dlog_print(DLOG_INFO, LOG_TAG, "Sensor %s logging at rate %u ms", key, pos_log);
 
 			if ((err = sensor_get_default_sensor(type, &(ad->sensors[idx].sensor))) != SENSOR_ERROR_NONE) return error_msg(err, __func__, "sensor_get_default_sensor");
 			if ((err = sensor_create_listener(ad->sensors[idx].sensor, &(ad->sensors[idx].listener))) != SENSOR_ERROR_NONE) return error_msg(err, __func__, "sensor_create_listener");
 			if ((err = sensor_listener_set_event_cb(ad->sensors[idx].listener, pos_log, callback, ad)) != SENSOR_ERROR_NONE) return error_msg(err, __func__, "sensor_listener_set_event_cb");
-			if ((err = sensor_listener_set_option(ad->sensors[idx].listener, SENSOR_OPTION_ALWAYS_ON)) != SENSOR_ERROR_NONE) return error_msg(err, __func__, "sensor_listener_set_option");
-
-
 			if ((err = sensor_listener_set_attribute_int(ad->sensors[idx].listener, SENSOR_ATTRIBUTE_AXIS_ORIENTATION, SENSOR_AXIS_DEVICE_ORIENTED)) != SENSOR_ERROR_NONE) return error_msg(err, __func__, "sensor_listener_set_attribute_int 1");
 			if ((err = sensor_listener_set_attribute_int(ad->sensors[idx].listener, SENSOR_ATTRIBUTE_PAUSE_POLICY, SENSOR_PAUSE_NONE)) != SENSOR_ERROR_NONE) return error_msg(err, __func__, "sensor_listener_set_attribute_int 2");
-
-
-
-
 			if ((err = sensor_listener_start(ad->sensors[idx].listener)) != SENSOR_ERROR_NONE) return error_msg(err, __func__, "listener start");
-
-
-
-//			if (sensor_get_default_sensor(type, &(ad->sensors[idx].sensor)) == SENSOR_ERROR_NONE) {
-//			   if (sensor_create_listener(ad->sensors[idx].sensor, &(ad->sensors[idx].listener)) == SENSOR_ERROR_NONE
-//				   && sensor_listener_set_event_cb(ad->sensors[idx].listener, pos_log, callback, ad) == SENSOR_ERROR_NONE
-//				   && sensor_listener_set_option(ad->sensors[idx].listener, SENSOR_OPTION_ALWAYS_ON) == SENSOR_ERROR_NONE
-//				   && sensor_listener_set_attribute_int(ad->sensors[idx].listener, SENSOR_ATTRIBUTE_AXIS_ORIENTATION, SENSOR_AXIS_DEVICE_ORIENTED) == SENSOR_ERROR_NONE
-//				   && sensor_listener_set_attribute_int(ad->sensors[idx].listener, SENSOR_ATTRIBUTE_PAUSE_POLICY, SENSOR_PAUSE_NONE) == SENSOR_ERROR_NONE)
-//			   {
-//				   if ((err = sensor_listener_start(ad->sensors[idx].listener)) != SENSOR_ERROR_NONE) error_msg(err, __func__, "listener start");
-//			   } else{
-//				   error_msg(err, __func__, "starting sensor");
-//			   }
-//			} else {
-//				error_msg(err, __func__, "sensor default");
-//			}
 
 			switch (mode){
 			case (0):
