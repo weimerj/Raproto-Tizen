@@ -55,7 +55,7 @@ monitor_cb(app_data_s *ad){
 			double diff = difftime(cur_time, ad->sensors[j].monitor.t);
 			//dlog_print(DLOG_INFO, LOG_TAG, "index: %d, %f", j, diff);
 			if (diff > (ad->sensors[j].monitor.period * 2)) {
-				dlog_print(DLOG_ERROR, LOG_TAG, "index: %d, %f", j, diff);
+				dlog_print(DLOG_ERROR, LOG_TAG, "monitor_cb: %d, %.3f", j, diff);
 				if ((diff > (ad->sensors[j].monitor.period * 10)) && (diff > RAPROTO_TIMEOUT_MONITOR_SECONDS)) {
 					task_error(RAPROTO_ERROR_MSG_MONITOR, ad);
 				} else {

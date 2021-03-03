@@ -131,7 +131,10 @@ launch_service_task(char *task, app_data_s *ad){
 
 	if ((!(ad->service.error)) || (!strcmp(task,RAPROTO_TASK_REQUEST_FACTORY_RESET))) {
 		if (running) {
-			if ((err = app_control_remove_extra_data(ad->service.control, RAPROTO_TASK_REQUEST)) != APP_CONTROL_ERROR_NONE) return error_msg(err, __func__, "remove extra data");
+			if ((err = app_control_remove_extra_data(ad->service.control, RAPROTO_TASK_REQUEST)) != APP_CONTROL_ERROR_NONE){
+				// todo: handle some of the errors rather than returning
+				return error_msg(err, __func__, "remove extra data");
+			}
 			if ((err = app_control_add_extra_data(ad->service.control, RAPROTO_TASK_REQUEST, task)) != APP_CONTROL_ERROR_NONE) return error_msg(err, __func__, "add extra data");
 
 			if (!strcmp(task,RAPROTO_TASK_REQUEST_LOG_CHECK)) {

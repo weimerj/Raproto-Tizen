@@ -64,13 +64,15 @@ settings_init(){
 	val = RAPROTO_SETTING_SENSOR_GENERIC_DEFAULT;
 	bundle_add_byte(settings, RAPROTO_SETTING_SENSOR_ACC, &val, sizeof(int));
 	bundle_add_byte(settings, RAPROTO_SETTING_SENSOR_HRM, &val, sizeof(int));
-	bundle_add_byte(settings, RAPROTO_SETTING_SENSOR_PPG, &val, sizeof(int));
+	bundle_add_byte(settings, RAPROTO_SETTING_SENSOR_HRM_GREEN, &val, sizeof(int));
 	bundle_add_byte(settings, RAPROTO_SETTING_SENSOR_TEMP, &val, sizeof(int));
 	bundle_add_byte(settings, RAPROTO_SETTING_SENSOR_SLEEP, &val, sizeof(int));
 	bundle_add_byte(settings, RAPROTO_SETTING_SENSOR_STEPS, &val, sizeof(int));
 	bundle_add_byte(settings, RAPROTO_SETTING_SENSOR_STRESS, &val, sizeof(int));
 	bundle_add_byte(settings, RAPROTO_SETTING_SENSOR_GYRO, &val, sizeof(int));
 	bundle_add_byte(settings, RAPROTO_SETTING_SENSOR_MAG, &val, sizeof(int));
+	bundle_add_byte(settings, RAPROTO_SETTING_SENSOR_GYRO_ROTATION, &val, sizeof(int));
+	bundle_add_byte(settings, RAPROTO_SETTING_SENSOR_GRAVITY, &val, sizeof(int));
 
 	// data that is updated by the software (only)
 	bundle_add_str(settings, RAPROTO_SETTING_LAST_UPDATE, RAPROTO_SETTING_LAST_UPDATE_DEFAULT);
@@ -79,7 +81,7 @@ settings_init(){
 	bundle_add_str(settings, RAPROTO_SETTING_MQTT_CLIENT_ID, RAPROTO_SETTING_MQTT_CLIENT_ID_DEFAULT);
 
 	char str[1000];
-	sprintf(str,"{\"sharedKeys\":\"%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\"}",
+	sprintf(str,"{\"sharedKeys\":\"%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\"}",
 		RAPROTO_SETTING_NAME,
 		RAPROTO_SETTING_POWER,
 		RAPROTO_SETTING_WIFI,
@@ -92,13 +94,15 @@ settings_init(){
 		RAPROTO_SETTING_MQTT_MAX_PAYLOAD_SIZE,
 		RAPROTO_SETTING_SENSOR_ACC,
 		RAPROTO_SETTING_SENSOR_HRM,
-		RAPROTO_SETTING_SENSOR_PPG,
+		RAPROTO_SETTING_SENSOR_HRM_GREEN,
 		RAPROTO_SETTING_SENSOR_TEMP,
 		RAPROTO_SETTING_SENSOR_SLEEP,
 		RAPROTO_SETTING_SENSOR_STEPS,
 		RAPROTO_SETTING_SENSOR_STRESS,
 		RAPROTO_SETTING_SENSOR_GYRO,
 		RAPROTO_SETTING_SENSOR_MAG,
+		RAPROTO_SETTING_SENSOR_GYRO_ROTATION,
+		RAPROTO_SETTING_SENSOR_GRAVITY,
 		RAPROTO_SETTING_TX_RATE,
 		RAPROTO_SETTING_BATTERY,
 		RAPROTO_SETTING_SAVE_RATE,

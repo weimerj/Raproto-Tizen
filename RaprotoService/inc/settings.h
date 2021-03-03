@@ -127,24 +127,21 @@
 #define RAPROTO_SETTING_HEART_BEAT_DEFAULT					1
 #define RAPROTO_SETTING_LOGGING								"SERVICE_LOGGING"
 #define RAPROTO_SETTING_ERROR								"SERVICE_ERROR"
+#define RAPROTO_SETTING_MQTT_BROKER_DEFAULT					"ssl://tb.precise.seas.upenn.edu:8883"
+#define RAPROTO_SETTING_NAME_DEFAULT							"\0"
 
-//#ifdef RELEASE_NEURALERT
-//	#define RAPROTO_SETTING_MQTT_BROKER_DEFAULT					"ssl://thingsboard.neuralerttechnologies.com:1883"
-//	#define RAPROTO_SETTING_NAME_DEFAULT							"Neuralert"
-//#else
-	#define RAPROTO_SETTING_MQTT_BROKER_DEFAULT					"ssl://tb.precise.seas.upenn.edu:8883"
-	#define RAPROTO_SETTING_NAME_DEFAULT							"\0"
-//#endif
 
 #define RAPROTO_SETTING_SENSOR_ACC			"ACC"
 #define RAPROTO_SETTING_SENSOR_HRM			"HRM"
-#define RAPROTO_SETTING_SENSOR_PPG			"PPG"
+#define RAPROTO_SETTING_SENSOR_HRM_GREEN		"HRM_GREEN"
 #define RAPROTO_SETTING_SENSOR_TEMP			"TEMP"
 #define RAPROTO_SETTING_SENSOR_SLEEP			"SLEEP"
 #define RAPROTO_SETTING_SENSOR_STEPS			"STEPS"
 #define RAPROTO_SETTING_SENSOR_STRESS		"STRESS"
 #define RAPROTO_SETTING_SENSOR_GYRO 			"GYRO"
+#define RAPROTO_SETTING_SENSOR_GYRO_ROTATION	"ROTATION"
 #define RAPROTO_SETTING_SENSOR_MAG			"MAG"
+#define RAPROTO_SETTING_SENSOR_GRAVITY		"GRAVITY"
 
 
 
@@ -185,13 +182,17 @@
 #define RAPROTO_SENSOR_BATTERY				2
 #define RAPROTO_SENSOR_ACC					3
 #define RAPROTO_SENSOR_HRM					4
+#define RAPROTO_SENSOR_GYRO					5
+#define RAPROTO_SENSOR_GYRO_ROTATION			6
+#define RAPROTO_SENSOR_HRM_GREEN				7
+#define RAPROTO_SENSOR_GRAVITY				8
 
 //TODO: Remove SAVE_RATE from API -- setup to save every minute -- non-configurable
 //TODO: Remove Battery from API -- setup to save every minute -- non-configurable
 #define QUEUE_SIZE_MESSAGES					10000 // 10k chosen for server side MQTT management -- could be larger.
-#define QUEUE_SIZE_SYSTEM 					120 // 1 Hz (max) * 60 min/sec * 2 for worst case
-#define QUEUE_SIZE_ACCELEROMETER				3600 // 30 Hz (max) * 60 min/sec *  2 for worst case
-#define QUEUE_SIZE_HEART_RATE_MONITOR		120 // 1 Hz (max) * 60 min/sec * 2 for worst case
+//#define QUEUE_SIZE_SYSTEM 					120 // 1 Hz (max) * 60 min/sec * 2 for worst case
+//#define QUEUE_SIZE_ACCELEROMETER				3600 // 30 Hz (max) * 60 min/sec *  2 for worst case
+//#define QUEUE_SIZE_HEART_RATE_MONITOR		120 // 1 Hz (max) * 60 min/sec * 2 for worst case
 
 #define ERROR_MESSAGE						"MSG"
 
@@ -219,7 +220,7 @@ typedef enum {
 
 
 
-#define RAPROTO_MAX_MESSAGE_SIZE 	100
+#define RAPROTO_MAX_MESSAGE_SIZE 	1000
 #define RAPROTO_MAX_KEY_SIZE 		25
 #define RAPROTO_MAX_DISPLAY_SIZE		25
 
