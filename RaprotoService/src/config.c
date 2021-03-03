@@ -111,13 +111,15 @@ config_get_settings_from_json(bundle *settings, char *s){
 		else if ((rc = config_is_valid_setting(RAPROTO_SETTING_HEART_BEAT, JSMN_PRIMITIVE, &t[n], s)) == RAPROTO_ERROR_NONE) config_get_setting_for_key(settings, &t[n], s);
 		else if ((rc = config_is_valid_setting(RAPROTO_SETTING_SENSOR_ACC, JSMN_PRIMITIVE, &t[n], s)) == RAPROTO_ERROR_NONE) config_get_setting_for_key(settings, &t[n], s);
 		else if ((rc = config_is_valid_setting(RAPROTO_SETTING_SENSOR_HRM, JSMN_PRIMITIVE, &t[n], s)) == RAPROTO_ERROR_NONE) config_get_setting_for_key(settings, &t[n], s);
-		else if ((rc = config_is_valid_setting(RAPROTO_SETTING_SENSOR_PPG, JSMN_PRIMITIVE, &t[n], s)) == RAPROTO_ERROR_NONE) config_get_setting_for_key(settings, &t[n], s);
+		else if ((rc = config_is_valid_setting(RAPROTO_SETTING_SENSOR_HRM_GREEN, JSMN_PRIMITIVE, &t[n], s)) == RAPROTO_ERROR_NONE) config_get_setting_for_key(settings, &t[n], s);
 		else if ((rc = config_is_valid_setting(RAPROTO_SETTING_SENSOR_TEMP, JSMN_PRIMITIVE, &t[n], s)) == RAPROTO_ERROR_NONE) config_get_setting_for_key(settings, &t[n], s);
 		else if ((rc = config_is_valid_setting(RAPROTO_SETTING_SENSOR_SLEEP, JSMN_PRIMITIVE, &t[n], s)) == RAPROTO_ERROR_NONE) config_get_setting_for_key(settings, &t[n], s);
 		else if ((rc = config_is_valid_setting(RAPROTO_SETTING_SENSOR_STEPS, JSMN_PRIMITIVE, &t[n], s)) == RAPROTO_ERROR_NONE) config_get_setting_for_key(settings, &t[n], s);
 		else if ((rc = config_is_valid_setting(RAPROTO_SETTING_SENSOR_STRESS, JSMN_PRIMITIVE, &t[n], s)) == RAPROTO_ERROR_NONE) config_get_setting_for_key(settings, &t[n], s);
 		else if ((rc = config_is_valid_setting(RAPROTO_SETTING_SENSOR_GYRO, JSMN_PRIMITIVE, &t[n], s)) == RAPROTO_ERROR_NONE) config_get_setting_for_key(settings, &t[n], s);
 		else if ((rc = config_is_valid_setting(RAPROTO_SETTING_SENSOR_MAG, JSMN_PRIMITIVE, &t[n], s)) == RAPROTO_ERROR_NONE) config_get_setting_for_key(settings, &t[n], s);
+		else if ((rc = config_is_valid_setting(RAPROTO_SETTING_SENSOR_GYRO_ROTATION, JSMN_PRIMITIVE, &t[n], s)) == RAPROTO_ERROR_NONE) config_get_setting_for_key(settings, &t[n], s);
+		else if ((rc = config_is_valid_setting(RAPROTO_SETTING_SENSOR_GRAVITY, JSMN_PRIMITIVE, &t[n], s)) == RAPROTO_ERROR_NONE) config_get_setting_for_key(settings, &t[n], s);
 		else {
 			dlog_print(DLOG_ERROR, LOG_TAG, "unknown key: flag = %d: %s", flag, &s[t[n].start]);
 			return RAPROTO_ERROR_INVALID_INPUT;
