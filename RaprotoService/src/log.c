@@ -186,6 +186,87 @@ log_sensor_system(void *data){
 }
 
 
+static void
+log_sensor_gravity(sensor_h sensor, sensor_event_s *event, void *data)
+{
+	app_data_s *ad = (app_data_s*)data;
+	char *device_id;
+	char msg[RAPROTO_MAX_MESSAGE_SIZE];
+	int err;
+
+	if (monitor_heart_beat(RAPROTO_SENSOR_GRAVITY, ad)) {
+		if ((err = bundle_get_str(ad->settings, RAPROTO_SETTING_DEVICE_ID, &device_id)) != BUNDLE_ERROR_NONE) error_msg(err, __func__, "device id");
+
+	    sensor_type_e type = SENSOR_ALL;
+	    if((sensor_get_type(sensor, &type) == SENSOR_ERROR_NONE) && type == SENSOR_GRAVITY)
+	    {
+	    		sprintf(msg, "{\"ts\": \"%llu\",\"values\"={\"%s_GRAVITY\":{\"x\":%.2f,\"y\":%.2f,\"z\":%.2f}}}",
+	    			log_gettime(),
+	    			device_id,
+				event->values[0],
+				event->values[1],
+				event->values[2]);
+	    }
+
+	    log_message_pack(ad, msg, 0);
+	}
+}
+
+
+
+static void
+log_sensor_green_light(sensor_h sensor, sensor_event_s *event, void *data)
+{
+	app_data_s *ad = (app_data_s*)data;
+	char *device_id;
+	char msg[RAPROTO_MAX_MESSAGE_SIZE];
+	int err;
+
+	if (monitor_heart_beat(RAPROTO_SENSOR_HRM_GREEN, ad)) {
+		if ((err = bundle_get_str(ad->settings, RAPROTO_SETTING_DEVICE_ID, &device_id)) != BUNDLE_ERROR_NONE) error_msg(err, __func__, "device id");
+
+	    sensor_type_e type = SENSOR_ALL;
+	    if((sensor_get_type(sensor, &type) == SENSOR_ERROR_NONE) && type == SENSOR_HRM_LED_GREEN)
+	    {
+	    		sprintf(msg, "{\"ts\": \"%llu\",\"values\"={\"%s_LED_GREEN\":{\"val\":%.1f}}}",
+	    			log_gettime(),
+	    			device_id,
+				event->values[0]);
+	    }
+
+	    log_message_pack(ad, msg, 0);
+	}
+}
+
+
+
+
+static void
+log_sensor_gyroscope(sensor_h sensor, sensor_event_s *event, void *data)
+{
+	app_data_s *ad = (app_data_s*)data;
+	char *device_id;
+	char msg[RAPROTO_MAX_MESSAGE_SIZE];
+	int err;
+
+	if (monitor_heart_beat(RAPROTO_SENSOR_GYRO, ad)) {
+		if ((err = bundle_get_str(ad->settings, RAPROTO_SETTING_DEVICE_ID, &device_id)) != BUNDLE_ERROR_NONE) error_msg(err, __func__, "device id");
+
+	    sensor_type_e type = SENSOR_ALL;
+	    if((sensor_get_type(sensor, &type) == SENSOR_ERROR_NONE) && type == SENSOR_GYROSCOPE)
+	    {
+	    		sprintf(msg, "{\"ts\": \"%llu\",\"values\"={\"%s_GYRO\":{\"x\":%.2f,\"y\":%.2f,\"z\":%.2f}}}",
+	    			log_gettime(),
+	    			device_id,
+				event->values[0],
+				event->values[1],
+				event->values[2]);
+	    }
+
+	    log_message_pack(ad, msg, 0);
+	}
+}
+
 
 
 static void
@@ -327,6 +408,12 @@ log_start(app_data_s *ad){
 	//TODO: add the other sensors
 	log_sensor_setup(RAPROTO_SENSOR_ACC, SENSOR_ACCELEROMETER, RAPROTO_SETTING_SENSOR_ACC, log_sensor_accelerometer, 0, ad);
 	log_sensor_setup(RAPROTO_SENSOR_HRM, SENSOR_HRM, RAPROTO_SETTING_SENSOR_HRM, log_sensor_heart_rate_monitor, 1, ad);
+	log_sensor_setup(RAPROTO_SENSOR_GRAVITY, SENSOR_GRAVITY, RAPROTO_SETTING_SENSOR_GRAVITY, log_sensor_gravity, 0, ad);
+	log_sensor_setup(RAPROTO_SENSOR_GYRO, SENSOR_GYROSCOPE, RAPROTO_SETTING_SENSOR_GYRO, log_sensor_gyroscope, 0, ad);
+	log_sensor_setup(RAPROTO_SENSOR_HRM_GREEN, SENSOR_HRM_LED_GREEN, RAPROTO_SETTING_SENSOR_HRM_GREEN, log_sensor_green_light, 0, ad);
+
+
+
 
 
 	//if ((err = device_display_set_brightness(0,1)) != DEVICE_ERROR_NONE) error_msg(err, __func__, "brightness");
