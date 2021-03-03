@@ -14,7 +14,15 @@ The general reference API for Raproto follows the Thingsboard MQTT API: https://
 Raproto requires shared attributes to configure.  The following is a list of shared attributes available for Raproto:
 In the following we write "key:Int:{x,y,z} - description" to be the key (string) and potential values Int values x,y,z and a description of the key.
 
-ACC:INT:{-1,0,...} - accelerometery sample rate in milliseconds (-1 = off).  Default = 100. 
+ACC:INT:{-1,0,...} - 3-axis accelerometery sample rate in milliseconds (-1 = off).  Default = -1. 
+
+GYRO:INT:{-1,0,...} - 3-axis gyroscope sample rate in milliseconds (-1 = off). Default = -1.
+
+GRAVITY:INT:{-1,0,...} - 3D-vector for gravity sample rate in milliseconds (-1 = off). Default = -1.
+
+HRM:INT:{-1,0,...} - heart rate monitor sample rate in milliseconds (-1 = off). Default = -1.
+
+HRM_GREEN:INT:{-1,0,...} - Photoplethsmygraph based on green light sample rate in milliseconds (-1 = off). Default -1.
 
 BATTERY:INT:{-1,0,...} - battery level sample rate in seconds (-1 = off).  Default = 60.
 
@@ -29,6 +37,7 @@ SAVE_RATE:INT:{-1,0,...} - Autosave rate in seconds for data (functionality not 
 TX_RATE:INT:{-1,0,...} - Transmit rate in seconds for data. Default = 60.
 
 WIFI:INT:{0,1,2} - WIFI configuration mode.  WIFI=0 never tries to connect/disconnect.  WIFI=1 only tries to connect.  WIFI=2 will connect/disconnect to optimize power.  Default = 1.
+
 
 
 
