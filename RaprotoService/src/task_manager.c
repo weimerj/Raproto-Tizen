@@ -31,6 +31,7 @@ task_msg(const char *msg, app_data_s *ad){
 			break;
 	}
 
+	config_publish(ad->settings);
 	return;
 }
 
@@ -52,9 +53,6 @@ task_warn(const char *msg, app_data_s *ad){
 	warn_msg(APP_CONTROL_ERROR_IO_ERROR, __func__, msg);
 
 	task_msg(msg,ad);
-
-	config_publish(ad->settings);
-	wifi_stop(ad);
 
 	return;
 }

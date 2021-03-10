@@ -18,6 +18,6 @@
 void wifi_start(app_data_s *ad);
 void wifi_deinitialize(app_data_s *ad);
 void wifi_stop(app_data_s *ad);
-int wifi_initialize(app_data_s *ad);
+void wifi_initialize(app_data_s *ad);
 
 #endif /* WIFI_H_ */

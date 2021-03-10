@@ -50,6 +50,8 @@ update_theme_all(int r, int g, int b, app_data_s *ad){
 void
 update_theme(app_data_s *ad){
 
+	dlog_print(DLOG_INFO, LOG_TAG, "update theme called");
+
 	static int prev_state = 0;
 	int current_state;
 
