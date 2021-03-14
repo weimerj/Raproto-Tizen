@@ -9,12 +9,7 @@
 #include "config.h"
 
 
-void
-config_publish(bundle *settings){
-	int err;
-	if ((err = event_publish_app_event(RAPROTO_TOPIC_SETTINGS, settings)) != EVENT_ERROR_NONE) error_msg(err,__func__, "publish config");
-	//dlog_print(DLOG_INFO, LOG_TAG, "sent configuration / settings");
-}
+
 
 
 void
@@ -22,7 +17,7 @@ config_status(char *val, bundle *settings){
 	int err;
 	if ((err = bundle_del(settings, RAPROTO_SETTING_CONFIG_STATUS)) != BUNDLE_ERROR_NONE) error_msg(err, __func__, "del last update");
 	if ((err = bundle_add_str(settings, RAPROTO_SETTING_CONFIG_STATUS, val)) != BUNDLE_ERROR_NONE) error_msg(err, __func__, "in progress");
-	config_publish(settings);
+	refresh_display(settings);
 }
 
 
@@ -177,7 +172,7 @@ config_received(app_data_s *ad,  char *payload, int payloadLen) {
 	ad->settings = settings;
 	data_save(ad->settings, RAPROTO_SETTING_FILENAME, NULL);
 
-	config_publish(ad->settings);
+	//config_publish(ad->settings);
 	dlog_print(DLOG_INFO, LOG_TAG, "parsed configuration");
 
 	config_status(RAPROTO_UPDATE_COMPLETE_MESSAGE, ad->settings);

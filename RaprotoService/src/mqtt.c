@@ -13,7 +13,7 @@ static void
 mqtt_warn(int err, char const *caller_name, char const *id, app_data_s *ad){
 	warn_msg(err, caller_name, id);
 	task_warn(RAPROTO_ERROR_MSG_MQTT, ad);
-	mqtt_destroy(ad);
+	mqtt_stop(ad);
 }
 
 
@@ -27,6 +27,7 @@ mqtt_destroy(app_data_s *ad){
 	}
 
 	task_process_cb(RAPROTO_TASK_MQTT_DESTROY_DONE);
+
 	return;
 }
 
@@ -35,7 +36,9 @@ mqtt_destroy(app_data_s *ad){
 static void
 mqtt_stop_failure_cb(void* context, MQTTAsync_failureData* response){
 	app_data_s *ad = (app_data_s*)context;
-	mqtt_warn(0, __func__, "mqtt stop failed", ad);
+	task_warn(RAPROTO_ERROR_MSG_MQTT, ad);
+	warn_msg(0, __func__, "mqtt stop failed");
+	task_process_cb(RAPROTO_TASK_MQTT_OFF_DONE);
 	return;
 }
 
@@ -58,7 +61,7 @@ mqtt_stop(app_data_s *ad){
 	opts.timeout = 10000;
 	opts.context = ad;
 
-	if ((err = MQTTAsync_disconnect(*(ad->mqtt.client), &opts)) != MQTTASYNC_SUCCESS) return mqtt_warn(err, __func__, "mqtt disconnect", ad);
+	if ((err = MQTTAsync_disconnect(*(ad->mqtt.client), &opts)) != MQTTASYNC_SUCCESS) return mqtt_destroy(ad);
 
 	return;
 }
@@ -100,7 +103,15 @@ mqtt_delivered(void *context, MQTTAsync_token dt)
 static void
 mqtt_connection_lost(void *context, char *cause) {
 	app_data_s *ad = (app_data_s*)context;
-	mqtt_warn(0, __func__, "connection lost", ad);
+	//mqtt_warn(0, __func__, "connection lost", ad);
+	warn_msg(0,__func__, "connection lost");
+	//mqtt_destroy(ad); //THIS MIGHT HANG (unconfirmed) -- using the free and null for now
+
+	free(ad->mqtt.client);
+	ad->mqtt.client = NULL;
+
+	task_process_cb(RAPROTO_TASK_MQTT_DESTROY_DONE);
+
 }
 
 
@@ -116,7 +127,12 @@ mqtt_start_success_cb(void* context, MQTTAsync_successData* response){
 static void
 mqtt_start_failure_cb(void* context, MQTTAsync_failureData* response){
 	app_data_s *ad = (app_data_s*)context;
-	mqtt_warn(0, __func__, "start failed", ad);
+	warn_msg(0, __func__, "start failed");
+	//mqtt_destroy(ad);  // DOES NOT WORK -- IT HANGS -- instead, free and Null the pointer.  Then move on.
+	free(ad->mqtt.client);
+	ad->mqtt.client = NULL;
+
+	task_process_cb(RAPROTO_TASK_MQTT_DESTROY_DONE);
 }
 
 
@@ -126,7 +142,10 @@ mqtt_start(app_data_s *ad){
 	int err;
 	wifi_deinitialize(ad);
 
-	if (ad->mqtt.client != NULL) return mqtt_warn(0, __func__, "client not Null", ad);
+	if (ad->mqtt.client != NULL){
+		warn_msg(0, __func__, "client not Null");
+		return mqtt_destroy(ad);
+	}
 
 	// create a new manager
 	ad->mqtt.client = (MQTTAsync*)malloc(sizeof(MQTTAsync));

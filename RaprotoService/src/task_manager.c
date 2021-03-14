@@ -21,8 +21,6 @@ task_msg(const char *msg, app_data_s *ad){
 		case RAPROTO_TASK_LOG_ON:
 			break;
 		case RAPROTO_TASK_TRANSMIT:
-			if ((err = bundle_del(ad->settings, RAPROTO_SETTING_LAST_SYNC)) != BUNDLE_ERROR_NONE) error_msg(err, __func__, "bundle del transmit");
-			if ((err = bundle_add_str(ad->settings, RAPROTO_SETTING_LAST_SYNC, msg)) != BUNDLE_ERROR_NONE) error_msg(err, __func__, "transmit error");
 			break;
 		case RAPROTO_TASK_NONE:
 			return;
@@ -31,7 +29,7 @@ task_msg(const char *msg, app_data_s *ad){
 			break;
 	}
 
-	config_publish(ad->settings);
+	//config_publish(ad->settings);
 	return;
 }
 
@@ -61,7 +59,7 @@ task_warn(const char *msg, app_data_s *ad){
 
 static void
 task_stop(app_data_s *ad){
-	config_publish(ad->settings); // publish configuration to main app
+	refresh_display(ad->settings); // publish configuration to main app
 
 	dlog_print(DLOG_INFO, LOG_TAG, "task complete: %d", ad->scheduler.active);
 	ad->scheduler.tasks[ad->scheduler.active] = RAPROTO_TASK_SCHEDULE_OFF;
@@ -103,6 +101,10 @@ task_process(const char *event_name, bundle *junk, void *data){
 			else if (!strcmp(event_name, RAPROTO_TASK_LOG_DONE)) wifi_stop(ad);
 			else if (!strcmp(event_name, RAPROTO_TASK_WIFI_OFF_DONE)) task_stop(ad);
 			return;
+		case (RAPROTO_TASK_LOG_OFF):
+			log_stop(ad);
+			task_stop(ad);
+			return;
 		case (RAPROTO_TASK_TRANSMIT):
 			if (!strcmp(event_name, RAPROTO_TASK_START)) wifi_start(ad);
 			else if (!strcmp(event_name, RAPROTO_TASK_WIFI_ON_DONE)) mqtt_start(ad);
@@ -131,7 +133,6 @@ void
 task_start(app_data_s *ad){
 
 	if (ad->scheduler.active == RAPROTO_TASK_NONE) {
-
 		for (int j = 0; j < RAPROTO_TASK_NUMBER; j++){
 			if (ad->scheduler.tasks[j] == RAPROTO_TASK_SCHEDULE_ON){
 				dlog_print(DLOG_INFO, LOG_TAG, "Starting task: %d", j);
@@ -140,11 +141,19 @@ task_start(app_data_s *ad){
 				return;
 			}
 		}
-
 	} else {
 		dlog_print(DLOG_INFO, LOG_TAG, "Task already in process: %d", ad->scheduler.active);
 	}
 	return;
 }
 
+
+
+void
+task_init(app_data_s *ad){
+	for (int j=0; j < RAPROTO_TASK_NUMBER; j++){
+		ad->scheduler.tasks[j] = RAPROTO_TASK_SCHEDULE_OFF;
+	}
+	ad->scheduler.active = RAPROTO_TASK_NONE;
+}
 

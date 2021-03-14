@@ -14,9 +14,9 @@ service_app_terminate(void *data)
     log_stop(ad);
 
     if (!(ad->reset)) {
-    		// Store all non-transmitted data
-    		log_message_pack_all(ad,0);
-    		data_save(ad->data.messages, RAPROTO_DATA_FILENAME, NULL);
+    		// Store all non-transmitted data (Handled by log_stop above)
+    		//log_message_pack_all(ad,0);
+    		//data_save(ad->data.messages, RAPROTO_DATA_FILENAME, NULL);
 
     		// Save all settings
     		data_save(ad->settings, RAPROTO_SETTING_FILENAME, NULL);
@@ -56,13 +56,14 @@ service_app_terminate(void *data)
 
 void
 service_stop_cb(const char *event_name, bundle *settings, void *data){
-	app_data_s *ad = (app_data_s*)data;
-	service_app_terminate(ad);
+	//app_data_s *ad = (app_data_s*)data;
+	service_app_exit();
 }
 
 bool
 service_app_create(void *data)
 {
+	int err;
 	dlog_print(DLOG_INFO, LOG_TAG, "app create");
 
 	app_data_s* ad = (app_data_s*)data;
@@ -70,6 +71,7 @@ service_app_create(void *data)
     // factory reset false
 	ad->reset = false;
 	ad->logging = false;
+	ad->display = true;
 
 	// settings initialization
 	ad->settings = data_load_settings();
@@ -77,8 +79,8 @@ service_app_create(void *data)
 	// Initialize monitors (must be done after loading settings)
 	monitor_init(ad);
 
-	// Scheduler initializations
-    ad->scheduler.active = RAPROTO_TASK_NONE;
+	// Task Scheduler initializations
+	task_init(ad);
 
 	// Wifi initializations
 	ad->wifi = NULL;
@@ -89,7 +91,11 @@ service_app_create(void *data)
 
     // message initialization
     ad->data.initialized = false;
+    ad->data.messages = data_load_data();
+    utility_log_amount_of_data(ad);
 
+
+    if ((err = device_power_request_lock(POWER_LOCK_CPU, 0)) != DEVICE_ERROR_NONE) error_msg(err, __func__, "lock CPU");
 
 	return true;
 }
@@ -122,10 +128,10 @@ service_app_control(app_control_h request, void *data)
 		if (strcmp(task,RAPROTO_TASK_REQUEST_LOG_CHECK)) dlog_print(DLOG_INFO, LOG_TAG, "Scheduling task: %s", task);
 
 
-
 		if (!strcmp(task, RAPROTO_TASK_REQUEST_START)) {
-			config_publish(ad->settings);
+			//pass -- do nothing
 		} else if (!strcmp(task, RAPROTO_TASK_REQUEST_STOP)) {
+			log_stop(ad);
 			service_app_exit();
 		} else if (!strcmp(task, RAPROTO_TASK_REQUEST_SETTINGS_TRANSMIT)) {
 			data_load_user(RAPROTO_SETTING_DEVICE_ID, request, ad);
@@ -134,7 +140,6 @@ service_app_control(app_control_h request, void *data)
 			data_load_user(RAPROTO_SETTING_MQTT_PASSWORD, request, ad);
 			data_load_user(RAPROTO_SETTING_MQTT_CONFIG_PUB_TOPIC, request, ad);
 			data_load_user(RAPROTO_SETTING_MQTT_CONFIG_SUB_TOPIC, request, ad);
-			config_publish(ad->settings);
 		} else if (!strcmp(task, RAPROTO_TASK_REQUEST_ERROR)) {
 			if (!(ad->reset)) error_msg(APP_CONTROL_ERROR_NONE, __func__, "error request from main app");
 		} else if (!strcmp(task, RAPROTO_TASK_REQUEST_FACTORY_RESET)) {
@@ -142,18 +147,18 @@ service_app_control(app_control_h request, void *data)
 		} else if (!strcmp(task, RAPROTO_TASK_REQUEST_LOG_ON)) {
 			ad->scheduler.tasks[RAPROTO_TASK_LOG_ON] = RAPROTO_TASK_SCHEDULE_ON;
 		} else if (!strcmp(task, RAPROTO_TASK_REQUEST_LOG_OFF)) {
-			return log_stop(ad);
+			ad->scheduler.tasks[RAPROTO_TASK_LOG_OFF] = RAPROTO_TASK_SCHEDULE_ON;
 		} else if (!strcmp(task, RAPROTO_TASK_REQUEST_LOG_CHECK)){
 			if (!monitor_cb(ad)) return;
 		} else if (!strcmp(task, RAPROTO_TASK_REQUEST_SETTINGS_UPDATE)) {
-			if (!(ad->logging)){
-				config_status(RAPROTO_UPDATE_INPROGRESS_MESSAGE, ad->settings);
-				ad->scheduler.tasks[RAPROTO_TASK_UPDATE] = RAPROTO_TASK_SCHEDULE_ON;
-			}
+			config_status(RAPROTO_UPDATE_INPROGRESS_MESSAGE, ad->settings);
+			ad->scheduler.tasks[RAPROTO_TASK_UPDATE] = RAPROTO_TASK_SCHEDULE_ON;
 		} else if (!strcmp(task, RAPROTO_TASK_REQUEST_TRANSMIT)) {
 			ad->scheduler.tasks[RAPROTO_TASK_TRANSMIT] = RAPROTO_TASK_SCHEDULE_ON;
 		} else if (!strcmp(task, RAPROTO_TASK_REQUEST_STOP_SOFT)) {
 			ad->scheduler.tasks[RAPROTO_TASK_STOP_SOFT] = RAPROTO_TASK_SCHEDULE_ON;
+		} else if (!strcmp(task, RAPROTO_TASK_REQUEST_CLEAR_QUEUE)){
+			task_init(ad);
 		} else {
 			error_msg(BUNDLE_ERROR_INVALID_PARAMETER, __func__, "unknown task");
 		}
@@ -163,10 +168,13 @@ service_app_control(app_control_h request, void *data)
 		if ((err = app_control_reply_to_launch_request(reply, request, APP_CONTROL_RESULT_SUCCEEDED)) != APP_CONTROL_ERROR_NONE) return error_msg(err, __func__,"reply");
 		if ((err = app_control_destroy(reply)) != APP_CONTROL_ERROR_NONE) return error_msg(err,__func__,"destroy");
 
+		if (ad->display) {
+			refresh_display(ad->settings);
+			ad->display = false;
+		}
+
 		task_start(ad);
 	}
-
-	//dlog_print(DLOG_INFO, LOG_TAG, "App control complete");
 
 	return;
 }
@@ -188,14 +196,29 @@ service_app_region_changed(app_event_info_h event_info, void *data)
 static void
 service_app_low_battery(app_event_info_h event_info, void *data)
 {
-	dlog_print(DLOG_ERROR, LOG_TAG, "Low battery called");
+	app_data_s *ad = (app_data_s*)data;
+	int err;
+	app_event_low_battery_status_e status;
+	dlog_print(DLOG_WARN, LOG_TAG, "Low battery called");
+
+	if ((err = app_event_get_low_battery_status(event_info, 	&status)) != APP_ERROR_NONE) error_msg(err,__func__, "get low battery");
+
+	if (status == APP_EVENT_LOW_BATTERY_POWER_OFF){
+		log_stop(ad);
+		service_app_exit();
+	}
+
 	/*APP_EVENT_LOW_BATTERY*/
 }
 
 static void
 service_app_low_memory(app_event_info_h event_info, void *data)
 {
+	app_data_s *ad = (app_data_s*)data;
 	dlog_print(DLOG_ERROR, LOG_TAG, "Low memory called");
+
+	log_stop(ad);
+	service_app_exit();
 	/*APP_EVENT_LOW_MEMORY*/
 }
 

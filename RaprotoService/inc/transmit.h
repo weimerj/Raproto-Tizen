@@ -14,6 +14,7 @@
 #include "error.h"
 #include "utility.h"
 #include "config.h"
+#include "log.h"
 #include "task_manager.h"
 
 void transmit_data(app_data_s *ad);

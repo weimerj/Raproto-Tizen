@@ -19,6 +19,7 @@
 #include "mqtt.h"
 #include "log.h"
 
+void task_init(app_data_s *ad);
 void task_start(app_data_s *ad);
 void task_warn(const char *msg, app_data_s *ad);
 void task_error(const char *msg, app_data_s *ad);

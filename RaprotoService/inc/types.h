@@ -82,6 +82,7 @@ typedef struct app_data {
     sensor_data_s sensors[RAPROTO_SENSOR_MAX_NUM]; // sensors and monitors
     bool reset;
     bool logging;
+    bool display;
 } app_data_s;
 
 

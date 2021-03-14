@@ -9,7 +9,9 @@
 
 
 
-void transmit_data_increment(app_data_s *ad) {
+
+void
+transmit_data_increment(app_data_s *ad) {
 	int err;
 	char key[RAPROTO_MAX_KEY_SIZE];
 
@@ -50,6 +52,7 @@ void transmit_data_failure_cb(void* context, MQTTAsync_failureData* response){
 void transmit_data_success_cb(void* context, MQTTAsync_successData* response){
 	app_data_s *ad = (app_data_s*)context;
 	transmit_data_increment(ad);
+	utility_log_amount_of_data(ad);
 	transmit_data(ad);
 }
 
@@ -72,8 +75,6 @@ transmit_data(app_data_s *ad) {
 
 	idx_start = *temp;
 	if (idx_start == *idx_end){
-		utility_time_update(ad->settings, RAPROTO_SETTING_LAST_SYNC, "%Y-%m-%d %H:%M:%S");
-		config_publish(ad->settings);
 		task_process_cb(RAPROTO_TASK_TRANSMIT_DONE);
 		return;
 	}
@@ -96,6 +97,9 @@ transmit_data(app_data_s *ad) {
 	MQTTAsync_sendMessage(*(ad->mqtt.client), topic, &pubmsg, &opts);
 
 	dlog_print(DLOG_INFO, LOG_TAG, "message: idx_start = %d, idx_end = %d, payload len = %d", idx_start, *idx_end, strlen(msg));
+
+
+
 
 	return;
 

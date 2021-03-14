@@ -10,6 +10,9 @@
 #include "log.h"
 
 
+
+
+
 static unsigned long long
 log_gettime(){
 
@@ -63,6 +66,7 @@ log_message_pack_all(app_data_s *ad, int attempt) {
 			if ((err = bundle_add_str(ad->data.messages, key, ad->data.payload)) != BUNDLE_ERROR_NONE) error_msg(err, __func__, "adding payload to bundle");
 
 			dlog_print(DLOG_INFO, LOG_TAG, "message %s: len = %d ", key, strlen(ad->data.payload));
+			utility_log_amount_of_data(ad);
 
 			memset(ad->data.payload, 0, (ad->data.payloadmax) * sizeof(char));
 		}
@@ -115,6 +119,7 @@ log_message_pack(app_data_s *ad, char *str, int attempt){
 		if ((err = bundle_add_str(ad->data.messages, key, ad->data.payload)) != BUNDLE_ERROR_NONE) error_msg(err, __func__, "adding payload to bundle");
 
 		dlog_print(DLOG_INFO, LOG_TAG, "message %s: len = %d ", key, strlen(ad->data.payload));
+		utility_log_amount_of_data(ad);
 
 		memset(ad->data.payload, 0, (ad->data.payloadmax) * sizeof(char));
 		ad->data.payload[0] = '[';
@@ -142,7 +147,6 @@ log_stop(app_data_s *ad){
 	if ((err = bundle_del(ad->settings, RAPROTO_SETTING_LOGGING)) != BUNDLE_ERROR_NONE) error_msg(err, __func__, "del logging");
 	val = RAPROTO_SETTING_LOGGING_FALSE;
 	if ((err = bundle_add_byte(ad->settings, RAPROTO_SETTING_LOGGING, &val, sizeof(int))) != BUNDLE_ERROR_NONE) error_msg(err, __func__, "add log byte");
-	config_publish(ad->settings);
 	ad->logging = false;
 
 	for (int j = 0; j < RAPROTO_SENSOR_MAX_NUM; j++){
@@ -152,9 +156,9 @@ log_stop(app_data_s *ad){
 		monitor_control(j, 1, RAPROTO_MONITOR_STATE_OFF, ad);
 	}
 
-	if ((err = device_power_release_lock(POWER_LOCK_CPU)) != DEVICE_ERROR_NONE) error_msg(err, __func__, "lock CPU release");
+	log_message_pack_all(ad,0);
+	data_save(ad->data.messages, RAPROTO_DATA_FILENAME, NULL);
 
-	service_app_exit();
 }
 
 
@@ -187,54 +191,60 @@ log_sensor_system(void *data){
 
 
 static void
-log_sensor_gravity(sensor_h sensor, sensor_event_s *event, void *data)
+log_sensor_gravity(sensor_h sensor, sensor_event_s *event, int events_count, void *data)
 {
 	app_data_s *ad = (app_data_s*)data;
 	char *device_id;
 	char msg[RAPROTO_MAX_MESSAGE_SIZE];
 	int err;
+	unsigned long long int offset = log_gettime();
 
 	if (monitor_heart_beat(RAPROTO_SENSOR_GRAVITY, ad)) {
 		if ((err = bundle_get_str(ad->settings, RAPROTO_SETTING_DEVICE_ID, &device_id)) != BUNDLE_ERROR_NONE) error_msg(err, __func__, "device id");
 
-	    sensor_type_e type = SENSOR_ALL;
-	    if((sensor_get_type(sensor, &type) == SENSOR_ERROR_NONE) && type == SENSOR_GRAVITY)
-	    {
-	    		sprintf(msg, "{\"ts\": \"%llu\",\"values\"={\"%s_GRAVITY\":{\"x\":%.2f,\"y\":%.2f,\"z\":%.2f}}}",
-	    			log_gettime(),
-	    			device_id,
-				event->values[0],
-				event->values[1],
-				event->values[2]);
-	    }
+		for (int j = 0; j < events_count; j++){
+			sensor_type_e type = SENSOR_ALL;
+			if((sensor_get_type(sensor, &type) == SENSOR_ERROR_NONE) && type == SENSOR_GRAVITY)
+			{
+				sprintf(msg, "{\"ts\": \"%llu\",\"values\"={\"%s_GRAVITY\":{\"x\":%.2f,\"y\":%.2f,\"z\":%.2f}}}",
+					offset + (event[j].timestamp - event[events_count-1].timestamp)/1000,
+					device_id,
+					event->values[0],
+					event->values[1],
+					event->values[2]);
+			}
 
-	    log_message_pack(ad, msg, 0);
+			log_message_pack(ad, msg, 0);
+		}
 	}
 }
 
 
 
 static void
-log_sensor_green_light(sensor_h sensor, sensor_event_s *event, void *data)
+log_sensor_green_light(sensor_h sensor, sensor_event_s *event, int events_count, void *data)
 {
 	app_data_s *ad = (app_data_s*)data;
 	char *device_id;
 	char msg[RAPROTO_MAX_MESSAGE_SIZE];
 	int err;
+	unsigned long long int offset = log_gettime();
 
 	if (monitor_heart_beat(RAPROTO_SENSOR_HRM_GREEN, ad)) {
 		if ((err = bundle_get_str(ad->settings, RAPROTO_SETTING_DEVICE_ID, &device_id)) != BUNDLE_ERROR_NONE) error_msg(err, __func__, "device id");
 
-	    sensor_type_e type = SENSOR_ALL;
-	    if((sensor_get_type(sensor, &type) == SENSOR_ERROR_NONE) && type == SENSOR_HRM_LED_GREEN)
-	    {
-	    		sprintf(msg, "{\"ts\": \"%llu\",\"values\"={\"%s_LED_GREEN\":{\"val\":%.1f}}}",
-	    			log_gettime(),
-	    			device_id,
-				event->values[0]);
-	    }
+		for (int j = 0; j < events_count; j++){
+			sensor_type_e type = SENSOR_ALL;
+			if((sensor_get_type(sensor, &type) == SENSOR_ERROR_NONE) && type == SENSOR_HRM_LED_GREEN)
+			{
+				sprintf(msg, "{\"ts\": \"%llu\",\"values\"={\"%s_LED_GREEN\":{\"val\":%.1f}}}",
+					offset + (event[j].timestamp - event[events_count-1].timestamp)/1000,
+					device_id,
+					event->values[0]);
+			}
 
-	    log_message_pack(ad, msg, 0);
+			log_message_pack(ad, msg, 0);
+		}
 	}
 }
 
@@ -242,56 +252,64 @@ log_sensor_green_light(sensor_h sensor, sensor_event_s *event, void *data)
 
 
 static void
-log_sensor_gyroscope(sensor_h sensor, sensor_event_s *event, void *data)
+log_sensor_gyroscope(sensor_h sensor, sensor_event_s *event, int events_count, void *data)
 {
 	app_data_s *ad = (app_data_s*)data;
 	char *device_id;
 	char msg[RAPROTO_MAX_MESSAGE_SIZE];
 	int err;
+	unsigned long long int offset = log_gettime();
 
 	if (monitor_heart_beat(RAPROTO_SENSOR_GYRO, ad)) {
 		if ((err = bundle_get_str(ad->settings, RAPROTO_SETTING_DEVICE_ID, &device_id)) != BUNDLE_ERROR_NONE) error_msg(err, __func__, "device id");
 
-	    sensor_type_e type = SENSOR_ALL;
-	    if((sensor_get_type(sensor, &type) == SENSOR_ERROR_NONE) && type == SENSOR_GYROSCOPE)
-	    {
-	    		sprintf(msg, "{\"ts\": \"%llu\",\"values\"={\"%s_GYRO\":{\"x\":%.2f,\"y\":%.2f,\"z\":%.2f}}}",
-	    			log_gettime(),
-	    			device_id,
-				event->values[0],
-				event->values[1],
-				event->values[2]);
-	    }
+		for (int j = 0; j < events_count; j++){
+			sensor_type_e type = SENSOR_ALL;
+			if((sensor_get_type(sensor, &type) == SENSOR_ERROR_NONE) && type == SENSOR_GYROSCOPE)
+			{
+				sprintf(msg, "{\"ts\": \"%llu\",\"values\"={\"%s_GYRO\":{\"x\":%.2f,\"y\":%.2f,\"z\":%.2f}}}",
+					offset + (event[j].timestamp - event[events_count-1].timestamp)/1000,
+					device_id,
+					event->values[0],
+					event->values[1],
+					event->values[2]);
+			}
 
-	    log_message_pack(ad, msg, 0);
+			log_message_pack(ad, msg, 0);
+		}
 	}
 }
 
 
 
 static void
-log_sensor_accelerometer(sensor_h sensor, sensor_event_s *event, void *data)
+log_sensor_accelerometer(sensor_h sensor, sensor_event_s *event, int events_count, void *data)
 {
 	app_data_s *ad = (app_data_s*)data;
 	char *device_id;
 	char msg[RAPROTO_MAX_MESSAGE_SIZE];
 	int err;
+	unsigned long long int offset = log_gettime();
 
 	if (monitor_heart_beat(RAPROTO_SENSOR_ACC, ad)) {
 		if ((err = bundle_get_str(ad->settings, RAPROTO_SETTING_DEVICE_ID, &device_id)) != BUNDLE_ERROR_NONE) error_msg(err, __func__, "device id");
 
-	    sensor_type_e type = SENSOR_ALL;
-	    if((sensor_get_type(sensor, &type) == SENSOR_ERROR_NONE) && type == SENSOR_ACCELEROMETER)
-	    {
-	    		sprintf(msg, "{\"ts\": \"%llu\",\"values\"={\"%s_ACC\":{\"x\":%.2f,\"y\":%.2f,\"z\":%.2f}}}",
-	    			log_gettime(),
-	    			device_id,
-				event->values[0],
-				event->values[1],
-				event->values[2]);
-	    }
+		for (int j = 0; j < events_count; j++){
+		    sensor_type_e type = SENSOR_ALL;
+		    if((sensor_get_type(sensor, &type) == SENSOR_ERROR_NONE) && type == SENSOR_ACCELEROMETER)
+		    {
 
-	    log_message_pack(ad, msg, 0);
+		    		sprintf(msg, "{\"ts\": \"%llu\",\"values\"={\"%s_ACC\":{\"x\":%.2f,\"y\":%.2f,\"z\":%.2f}}}",
+		    			offset + (event[j].timestamp - event[events_count-1].timestamp)/1000,
+		    			device_id,
+					event[j].values[0],
+					event[j].values[1],
+					event[j].values[2]);
+		    }
+
+		    log_message_pack(ad, msg, 0);
+
+		}
 	}
 }
 
@@ -299,26 +317,30 @@ log_sensor_accelerometer(sensor_h sensor, sensor_event_s *event, void *data)
 
 
 static void
-log_sensor_heart_rate_monitor(sensor_h sensor, sensor_event_s *event, void *data)
+log_sensor_heart_rate_monitor(sensor_h sensor, sensor_event_s *event, int events_count, void *data)
 {
 	app_data_s *ad = (app_data_s*)data;
 	char *device_id;
 	char msg[RAPROTO_MAX_MESSAGE_SIZE];
 	int err;
+	unsigned long long int offset = log_gettime();
 
 	if (monitor_heart_beat(RAPROTO_SENSOR_HRM, ad)) {
 		if ((err = bundle_get_str(ad->settings, RAPROTO_SETTING_DEVICE_ID, &device_id)) != BUNDLE_ERROR_NONE) error_msg(err, __func__, "device id");
 
-	    sensor_type_e type = SENSOR_ALL;
-	    if((sensor_get_type(sensor, &type) == SENSOR_ERROR_NONE) && (type == SENSOR_HRM))
-	    {
-	    		sprintf(msg, "{\"ts\": \"%lld\",\"values\"={\"%s_HRM\":{\"hrm\":%d}}}",
-	    			log_gettime(),
-	    			device_id,
-				(int)event->values[0]);
-	    }
+		for (int j = 0; j < events_count; j++){
 
-	    log_message_pack(ad, msg, 0);
+			sensor_type_e type = SENSOR_ALL;
+			if((sensor_get_type(sensor, &type) == SENSOR_ERROR_NONE) && (type == SENSOR_HRM))
+			{
+				sprintf(msg, "{\"ts\": \"%lld\",\"values\"={\"%s_HRM\":{\"hrm\":%d}}}",
+					offset + (event[j].timestamp - event[events_count-1].timestamp)/1000,
+					device_id,
+					(int)event->values[0]);
+			}
+
+			log_message_pack(ad, msg, 0);
+		}
 	}
 }
 
@@ -326,7 +348,7 @@ log_sensor_heart_rate_monitor(sensor_h sensor, sensor_event_s *event, void *data
 
 
 static void
-log_sensor_setup(int idx, sensor_type_e type, const char *key, sensor_event_cb callback, int mode, app_data_s *ad){
+log_sensor_setup(int idx, sensor_type_e type, const char *key, sensor_events_cb callback, int mode, app_data_s *ad){
 
 	int err;
 	bool sensor_supported = false;
@@ -347,7 +369,8 @@ log_sensor_setup(int idx, sensor_type_e type, const char *key, sensor_event_cb c
 
 			if ((err = sensor_get_default_sensor(type, &(ad->sensors[idx].sensor))) != SENSOR_ERROR_NONE) return error_msg(err, __func__, "sensor_get_default_sensor");
 			if ((err = sensor_create_listener(ad->sensors[idx].sensor, &(ad->sensors[idx].listener))) != SENSOR_ERROR_NONE) return error_msg(err, __func__, "sensor_create_listener");
-			if ((err = sensor_listener_set_event_cb(ad->sensors[idx].listener, pos_log, callback, ad)) != SENSOR_ERROR_NONE) return error_msg(err, __func__, "sensor_listener_set_event_cb");
+			if ((err = sensor_listener_set_events_cb(ad->sensors[idx].listener, callback, ad)) != SENSOR_ERROR_NONE) return error_msg(err, __func__, "sensor_listener_set_event_cb");
+			if ((err = sensor_listener_set_interval(ad->sensors[idx].listener, pos_log)) != SENSOR_ERROR_NONE) return error_msg(err, __func__, "sensor_listener_set_event_cb");
 			if ((err = sensor_listener_set_attribute_int(ad->sensors[idx].listener, SENSOR_ATTRIBUTE_AXIS_ORIENTATION, SENSOR_AXIS_DEVICE_ORIENTED)) != SENSOR_ERROR_NONE) return error_msg(err, __func__, "sensor_listener_set_attribute_int 1");
 			if ((err = sensor_listener_set_attribute_int(ad->sensors[idx].listener, SENSOR_ATTRIBUTE_PAUSE_POLICY, SENSOR_PAUSE_NONE)) != SENSOR_ERROR_NONE) return error_msg(err, __func__, "sensor_listener_set_attribute_int 2");
 			if ((err = sensor_listener_start(ad->sensors[idx].listener)) != SENSOR_ERROR_NONE) return error_msg(err, __func__, "listener start");
@@ -413,12 +436,9 @@ log_start(app_data_s *ad){
 	log_sensor_setup(RAPROTO_SENSOR_HRM_GREEN, SENSOR_HRM_LED_GREEN, RAPROTO_SETTING_SENSOR_HRM_GREEN, log_sensor_green_light, 0, ad);
 
 
-
-
-
 	//if ((err = device_display_set_brightness(0,1)) != DEVICE_ERROR_NONE) error_msg(err, __func__, "brightness");
 	//if ((err = device_display_change_state(DISPLAY_STATE_SCREEN_OFF)) != DEVICE_ERROR_NONE) error_msg(err, __func__, "screen state");
-	if ((err = device_power_request_lock(POWER_LOCK_CPU, 0)) != DEVICE_ERROR_NONE) error_msg(err, __func__, "lock CPU");
+	//if ((err = device_power_request_lock(POWER_LOCK_CPU, 0)) != DEVICE_ERROR_NONE) error_msg(err, __func__, "lock CPU");
 
 	dlog_print(DLOG_INFO, LOG_TAG, "monitoring started");
 

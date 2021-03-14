@@ -23,7 +23,7 @@ get_config_menu_content(void *data, Evas_Object *obj, const char *part)
 	int err;
 	char *str;
 
-	//dlog_print(DLOG_INFO, LOG_TAG, "%d : %s", lid->index, part);
+	//dlog_print(DLOG_INFO, LOG_TAG, "Config %d : %s", lid->index, part);
 
 	// only using elm.swallow.content -- anything else is an error.
 	if (strcmp("elm.swallow.content", part)){
@@ -33,15 +33,15 @@ get_config_menu_content(void *data, Evas_Object *obj, const char *part)
 
 	switch (lid->index) {
 		case (CONFIG_UPDATE):
-			if ((err = bundle_get_str(lid->settings, RAPROTO_SETTING_CONFIG_STATUS, &str)) != BUNDLE_ERROR_NONE) error_msg(err, __func__, "config status");
+			if ((err = bundle_get_str(*(lid->settings), RAPROTO_SETTING_CONFIG_STATUS, &str)) != BUNDLE_ERROR_NONE) error_msg(err, __func__, "config status");
 			bg = get_genlist_item_2text(obj,"Update", str);
 			break;
 		case (CONFIG_SUBSCRIBE):
-			if ((err = bundle_get_str(lid->settings, RAPROTO_SETTING_MQTT_CONFIG_SUB_TOPIC, &str)) != BUNDLE_ERROR_NONE) error_msg(err, __func__, "sub topic");
+			if ((err = bundle_get_str(*(lid->settings), RAPROTO_SETTING_MQTT_CONFIG_SUB_TOPIC, &str)) != BUNDLE_ERROR_NONE) error_msg(err, __func__, "sub topic");
 			bg = get_genlist_item_2text(obj,"Subscribe Topic", str);
 			break;
 		case (CONFIG_PUBLISH):
-			if ((err = bundle_get_str(lid->settings, RAPROTO_SETTING_MQTT_CONFIG_PUB_TOPIC, &str)) != BUNDLE_ERROR_NONE) error_msg(err, __func__, "pub topic");
+			if ((err = bundle_get_str(*(lid->settings), RAPROTO_SETTING_MQTT_CONFIG_PUB_TOPIC, &str)) != BUNDLE_ERROR_NONE) error_msg(err, __func__, "pub topic");
 			bg = get_genlist_item_2text(obj,"Publish Topic", str);
 			break;
 		default:
@@ -66,7 +66,7 @@ get_config_menu_title(void *data, Evas_Object *obj, const char *part)
 
 
 
-static void
+void
 on_config_update_cb(void *data, Evas_Object *obj, void *event_info)
 {
 	app_data_s *ad = (app_data_s*)data;

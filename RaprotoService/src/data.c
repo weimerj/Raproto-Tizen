@@ -140,7 +140,7 @@ data_setup(app_data_s *ad){
 
 	if (!(ad->data.initialized)) {
 
-		ad->data.messages = data_load_data();
+		if (ad->data.messages == NULL) ad->data.messages = data_load_data();
 
 		ad->data.mutex = 0;
 
