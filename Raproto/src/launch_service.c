@@ -64,13 +64,10 @@ launch_service_start_cb(app_control_h request, app_control_h reply, app_control_
 	app_data_s *ad = (app_data_s*)data;
 	ad->service.t = time(NULL);
 	if (!(ad->service.reboot)) {
-		ecore_init();
 		ecore_timer_add(RAPROTO_HEART_BEAT, launch_heart_beat, ad);
-		ecore_main_loop_begin();
 	} else {
 		ad->service.reboot = false;
 	}
-
 }
 
 
@@ -93,6 +90,7 @@ launch_service_start(app_data_s *ad) {
 static void
 launch_service_task_wait_for_response(app_control_h *control, app_control_reply_cb callback, void *user_data) {
 	int err;
+
 	while ((err = app_control_send_launch_request(*control, callback, user_data)) != APP_CONTROL_ERROR_NONE) {
 		if (err == APP_CONTROL_ERROR_LAUNCH_REJECTED){
 			usleep(RAPROTO_MUTEX_SLEEP);
@@ -103,22 +101,22 @@ launch_service_task_wait_for_response(app_control_h *control, app_control_reply_
 }
 
 
-static void
-launch_service_task_wait_for_terminate(app_data_s *ad) {
-	int err;
-	bool running;
-	ad->service.reboot = true;
-
-	launch_service_task_wait_for_response(&(ad->service.control), NULL, NULL);
-
-	if ((err = app_manager_is_running(RAPROTO_SERVICE_APP_ID, &running)) != APP_MANAGER_ERROR_NONE) error_msg(err, __func__, "app running");
-	while (running) {
-		usleep(RAPROTO_MUTEX_SLEEP);
-		if ((err = app_manager_is_running(RAPROTO_SERVICE_APP_ID, &running)) != APP_MANAGER_ERROR_NONE) error_msg(err, __func__, "app running");
-	}
-
-	launch_service_start(ad);
-}
+//static void
+//launch_service_task_wait_for_terminate(app_data_s *ad) {
+//	int err;
+//	bool running;
+//	ad->service.reboot = true;
+//
+//	launch_service_task_wait_for_response(&(ad->service.control), NULL, NULL);
+//
+//	if ((err = app_manager_is_running(RAPROTO_SERVICE_APP_ID, &running)) != APP_MANAGER_ERROR_NONE) error_msg(err, __func__, "app running");
+//	while (running) {
+//		usleep(RAPROTO_MUTEX_SLEEP);
+//		if ((err = app_manager_is_running(RAPROTO_SERVICE_APP_ID, &running)) != APP_MANAGER_ERROR_NONE) error_msg(err, __func__, "app running");
+//	}
+//
+//	launch_service_start(ad);
+//}
 
 void
 launch_service_task(char *task, app_data_s *ad){
@@ -129,25 +127,32 @@ launch_service_task(char *task, app_data_s *ad){
 
 	if ((err = app_manager_is_running(RAPROTO_SERVICE_APP_ID, &running)) != APP_MANAGER_ERROR_NONE) error_msg(err, __func__, "app running");
 
-	if ((!(ad->service.error)) || (!strcmp(task,RAPROTO_TASK_REQUEST_FACTORY_RESET))) {
-		if (running) {
-			if ((err = app_control_remove_extra_data(ad->service.control, RAPROTO_TASK_REQUEST)) != APP_CONTROL_ERROR_NONE){
-				// todo: handle some of the errors rather than returning
-				return error_msg(err, __func__, "remove extra data");
-			}
-			if ((err = app_control_add_extra_data(ad->service.control, RAPROTO_TASK_REQUEST, task)) != APP_CONTROL_ERROR_NONE) return error_msg(err, __func__, "add extra data");
-
-			if (!strcmp(task,RAPROTO_TASK_REQUEST_LOG_CHECK)) {
-				launch_service_task_wait_for_response(&(ad->service.control), launch_heart_beat_cb, (void*)ad);
-			} else if (!strcmp(task, RAPROTO_TASK_REQUEST_LOG_OFF)) {
-				launch_service_task_wait_for_terminate(ad);
-			}	else {
-				launch_service_task_wait_for_response(&(ad->service.control), NULL, NULL);
-			}
-		} else {
-			ad->service.error = true;
+	//if ((!(ad->service.error)) || (!strcmp(task,RAPROTO_TASK_REQUEST_FACTORY_RESET)) || (!strcmp(task,RAPROTO_TASK_REQUEST_STOP))) {
+	if (running) {
+		if ((err = app_control_remove_extra_data(ad->service.control, RAPROTO_TASK_REQUEST)) != APP_CONTROL_ERROR_NONE){
+			// todo: handle some of the errors rather than returning
+			return error_msg(err, __func__, "remove extra data");
 		}
+		if ((err = app_control_add_extra_data(ad->service.control, RAPROTO_TASK_REQUEST, task)) != APP_CONTROL_ERROR_NONE) return error_msg(err, __func__, "add extra data");
+
+		if (!strcmp(task,RAPROTO_TASK_REQUEST_LOG_CHECK)) {
+			launch_service_task_wait_for_response(&(ad->service.control), launch_heart_beat_cb, (void*)ad);
+		} else {
+			launch_service_task_wait_for_response(&(ad->service.control), NULL, NULL);
+		}
+
+
+//		if (!strcmp(task,RAPROTO_TASK_REQUEST_LOG_CHECK)) {
+//			launch_service_task_wait_for_response(&(ad->service.control), launch_heart_beat_cb, (void*)ad);
+//		} else if (!strcmp(task, RAPROTO_TASK_REQUEST_LOG_OFF)) {
+//			launch_service_task_wait_for_terminate(ad);
+//		} else {
+//			launch_service_task_wait_for_response(&(ad->service.control), NULL, NULL);
+//		}
+	} else {
+		ad->service.error = true;
 	}
+	//}
 }
 
 

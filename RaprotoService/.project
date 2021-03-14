@@ -3,7 +3,6 @@
 	<name>RaprotoService</name>
 	<comment></comment>
 	<projects>
-		<project>StaticLibrary</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>
@@ -26,7 +25,7 @@
 	</natures>
 	<filteredResources>
 		<filter>
-			<id>1592495271994</id>
+			<id>1615404170035</id>
 			<name></name>
 			<type>26</type>
 			<matcher>
@@ -35,7 +34,7 @@
 			</matcher>
 		</filter>
 		<filter>
-			<id>1592495271998</id>
+			<id>1615404170041</id>
 			<name></name>
 			<type>6</type>
 			<matcher>

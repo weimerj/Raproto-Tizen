@@ -9,6 +9,7 @@
 #include "monitor.h"
 
 
+
 bool
 monitor_heart_beat(int idx, app_data_s *ad){
 	ad->sensors[idx].monitor.t = time(NULL);

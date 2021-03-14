@@ -20,23 +20,6 @@ app_control(app_control_h app_control, void *data) {
 }
 
 static void
-app_pause(void *data) {
-	//app_data_s *ad = (app_data_s*)data;
-
-	dlog_print(DLOG_INFO, LOG_TAG, "pause");
-
-	ui_app_exit();
-
-}
-
-
-static void
-app_resume(void *data) {
-	//dlog_print(DLOG_INFO, LOG_TAG, "resume");
-}
-
-
-static void
 app_terminate(void *data) {
 	app_data_s *ad = (app_data_s*)data;
 	int err;
@@ -47,9 +30,26 @@ app_terminate(void *data) {
 
 	bundle_free(ad->settings);
 
-	ecore_main_loop_quit();
+	//ecore_main_loop_quit(); // THIS MAY NOT BE NEEDED -- leaving for now.
 	dlog_print(DLOG_INFO, LOG_TAG, "app terminate");
 }
+
+
+static void
+app_pause(void *data) {
+	//app_data_s *ad = (app_data_s*)data;
+
+	dlog_print(DLOG_INFO, LOG_TAG, "pause");
+	ui_app_exit();
+}
+
+
+static void
+app_resume(void *data) {
+	dlog_print(DLOG_INFO, LOG_TAG, "resume");
+}
+
+
 
 
 static void

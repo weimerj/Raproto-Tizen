@@ -8,13 +8,15 @@
 #ifndef UTILITY_H_
 #define UTILITY_H_
 
+#include "main_menu.h"
+
 #include "types.h"
 #include "definitions.h"
 #include <Elementary.h>
 #include <app.h>
 #include <dlog.h>
 
-
+void update_settings(const char *event_name, bundle *settings, void *data);
 void update_theme(app_data_s *ad);
 void update_frame(Evas_Object *gl, int num_entries);
 

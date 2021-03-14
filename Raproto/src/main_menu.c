@@ -15,7 +15,10 @@ main_check_changed_item_cb(void *data, Evas_Object *obj, void *event_info){
 	int err;
 	bundle *b = bundle_create();
 
-	if (service->logging) {
+	if (service->error){
+		bundle_add_str(b, RAPROTO_TASK_REQUEST, RAPROTO_TASK_REQUEST_LOG_OFF);
+		elm_check_state_set(obj, EINA_FALSE); // UNTESTED: NOT SURE IF THIS IS RIGHT
+	} else if (service->logging) {
 		bundle_add_str(b, RAPROTO_TASK_REQUEST, RAPROTO_TASK_REQUEST_LOG_OFF);
 	} else {
 		bundle_add_str(b, RAPROTO_TASK_REQUEST, RAPROTO_TASK_REQUEST_LOG_ON);
@@ -26,6 +29,8 @@ main_check_changed_item_cb(void *data, Evas_Object *obj, void *event_info){
 
 	return;
 }
+
+
 
 
 /*
@@ -52,7 +57,7 @@ get_main_menu_content(void *data, Evas_Object *obj, const char *part)
 
 	switch (lid->index) {
 		case (MAIN_MENU_DEVICE_ID):
-			if ((err = bundle_get_str(lid->settings, RAPROTO_SETTING_DEVICE_ID, &str)) != BUNDLE_ERROR_NONE) error_msg(err, __func__, "device id");
+			if ((err = bundle_get_str(*(lid->settings), RAPROTO_SETTING_DEVICE_ID, &str)) != BUNDLE_ERROR_NONE) error_msg(err, __func__, "device id");
 			bg = get_genlist_item_2text(obj,"Device ID",str);
 			break;
 		case (MAIN_MENU_ONOFF):
@@ -65,13 +70,16 @@ get_main_menu_content(void *data, Evas_Object *obj, const char *part)
 			bg = get_genlist_item_1text(obj,"Settings");
 			break;
 		case (MAIN_MENU_SYNC):
-			if ((err = bundle_get_str(lid->settings, RAPROTO_SETTING_LAST_SYNC, &str)) != BUNDLE_ERROR_NONE) error_msg(err, __func__, "sync status");
-			sprintf(msg,"Synced: %s", str);
+			if ((err = bundle_get_str(*(lid->settings), RAPROTO_SETTING_DATA_STORED, &str)) != BUNDLE_ERROR_NONE) error_msg(err, __func__, "sync status");
+			sprintf(msg,"%s", str);
 			bg = get_genlist_item_2text(obj,"Sync Now", msg);
 			break;
 		case (MAIN_MENU_ABOUT):
 			if ((err = app_get_version(&version)) != APP_ERROR_NONE) error_msg(err, __func__, "version");
 			bg = get_genlist_item_2text(obj,"About", version);
+			break;
+		case (MAIN_MENU_EXIT):
+			bg = get_genlist_item_2text(obj,"Exit", "save and stop");
 			break;
 		default:
 			return NULL;
@@ -96,7 +104,7 @@ get_main_menu_title(void *data, Evas_Object *obj, const char *part)
 	int err;
 	char *str;
 	char msg[MAX_STRING_SIZE];
-	if ((err = bundle_get_str(lid->settings, RAPROTO_SETTING_NAME, &str)) != BUNDLE_ERROR_NONE) error_msg(err, __func__, "name");
+	if ((err = bundle_get_str(*(lid->settings), RAPROTO_SETTING_NAME, &str)) != BUNDLE_ERROR_NONE) error_msg(err, __func__, "name");
 		sprintf(msg,"<align=center>Raproto<ps>%s</align>", str);
 
 
@@ -105,6 +113,20 @@ get_main_menu_title(void *data, Evas_Object *obj, const char *part)
 
 
 
+void
+return_subject_id(void *data, Evas_Object *entry, void *event_info){
+	app_data_s *ad = (app_data_s*)data;
+	int err;
+
+	if ((err = app_control_remove_extra_data(ad->service.control, RAPROTO_SETTING_DEVICE_ID)) != APP_CONTROL_ERROR_NONE) return error_msg(err, __func__, "remove extra data");
+	if ((err = app_control_add_extra_data(ad->service.control, RAPROTO_SETTING_DEVICE_ID, elm_entry_entry_get(entry))) != APP_CONTROL_ERROR_NONE) return error_msg(err, __func__, "extra data");
+
+	launch_service_task(RAPROTO_TASK_REQUEST_SETTINGS_TRANSMIT, ad);
+
+	elm_naviframe_item_pop(ad->nf);
+
+	return;
+}
 
 
 
@@ -138,15 +160,28 @@ on_onoff_cb(void *data, Evas_Object *obj, void *event_info) {
 }
 
 
-//static void
-//on_subject_id_cb(void *data, Evas_Object *obj, void *event_info) {
-//	app_data_s *ad = (app_data_s*)data;
-//	char *id;
-//	bundle_get_str(ad->settings, RAPROTO_SETTING_DEVICE_ID, &id);
-//	return create_entry(ad, ELM_INPUT_PANEL_LAYOUT_NUMBERONLY, id, return_subject_id);
-//}
+static void
+on_subject_id_cb(void *data, Evas_Object *obj, void *event_info) {
+	app_data_s *ad = (app_data_s*)data;
+	if (ad->service.logging) return;
+	char *id;
+	bundle_get_str(ad->settings, RAPROTO_SETTING_DEVICE_ID, &id);
+	return create_entry(ad, ELM_INPUT_PANEL_LAYOUT_NUMBERONLY, id, return_subject_id);
+}
 
 
+static void
+on_stop_cb(void *data, Evas_Object *obj, void *event_info) {
+	app_data_s *ad = (app_data_s*)data;
+
+	// THe following was a nice idea, but doesn't seem to work especially well.
+	//if (!(ad->service.logging)) launch_service_task(RAPROTO_TASK_REQUEST_STOP, ad);
+	//else launch_service_task(RAPROTO_TASK_REQUEST_CLEAR_QUEUE, ad);
+
+	launch_service_task(RAPROTO_TASK_REQUEST_STOP, ad);
+	ui_app_exit();
+	return;
+}
 
 
 
@@ -158,10 +193,11 @@ create_main_menu(app_data_s *ad) {
 	Elm_Object_Item *nf_it;
 
 	Evas_Smart_Cb func[NUM_OF_MAIN_MENU_ITEMS];
-	func[MAIN_MENU_DEVICE_ID] = NULL;
+	func[MAIN_MENU_DEVICE_ID] = on_subject_id_cb;
 	func[MAIN_MENU_ONOFF] = on_onoff_cb;
 	func[MAIN_MENU_SYNC] = on_sync_cb;
 	func[MAIN_MENU_SETTINGS] = on_settings_cb;
+	func[MAIN_MENU_EXIT] = on_stop_cb;
 	func[MAIN_MENU_ABOUT] = on_about_cb;
 
 	menu_data_s menu;

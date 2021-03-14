@@ -39,7 +39,7 @@ typedef struct service_data{
 
 typedef struct list_item_data {
 	int index;
-	bundle *settings;
+	bundle **settings;
 	service_data_s *service;
 } list_item_data_s;
 

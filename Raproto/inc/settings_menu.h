@@ -14,7 +14,7 @@
 #include <dlog.h>
 #include "config_menu.h"
 #include "mqtt_menu.h"
-#include "main_menu.h"
+//#include "main_menu.h"
 
 //#include <app_event.h>
 //#include <app_common.h>
@@ -22,7 +22,7 @@
 //#include "about_menu.h"
 //#include "launch_service.h"
 
-void update_settings(const char *event_name, bundle *settings, void *data);
+
 void create_settings_menu(app_data_s *ad);
 
 

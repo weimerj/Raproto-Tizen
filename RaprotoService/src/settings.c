@@ -77,7 +77,7 @@ settings_init(){
 	// data that is updated by the software (only)
 	bundle_add_str(settings, RAPROTO_SETTING_LAST_UPDATE, RAPROTO_SETTING_LAST_UPDATE_DEFAULT);
 	bundle_add_str(settings, RAPROTO_SETTING_CONFIG_STATUS, RAPROTO_SETTING_CONFIG_STATUS_DEFAULT);
-	bundle_add_str(settings, RAPROTO_SETTING_LAST_SYNC, RAPROTO_SETTING_LAST_SYNC_DEFAULT);
+	bundle_add_str(settings, RAPROTO_SETTING_DATA_STORED, RAPROTO_SETTING_DATA_STORED_DEFAULT);
 	bundle_add_str(settings, RAPROTO_SETTING_MQTT_CLIENT_ID, RAPROTO_SETTING_MQTT_CLIENT_ID_DEFAULT);
 
 	char str[1000];

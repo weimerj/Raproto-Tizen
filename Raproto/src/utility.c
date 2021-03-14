@@ -14,8 +14,91 @@
 void
 error_msg(int rc, char const *caller_name, char const *id) {
 	dlog_print(DLOG_ERROR, LOG_TAG, "%s : %s : [%d, %s]",caller_name, id, rc, get_error_message(rc));
+	//ui_app_exit();
 	return;
 }
+
+
+
+static void
+update_settings_user(char *key, app_data_s *ad){
+	int err;
+	char *str;
+	if ((err = bundle_get_str(ad->settings, key, &str)) != BUNDLE_ERROR_NONE) return error_msg(err, __func__, "get str");
+	if (strlen(str) > 0) {
+		if ((err = app_control_add_extra_data(ad->service.control, key, str)) != APP_CONTROL_ERROR_NONE) return error_msg(err, __func__, "add data");
+	}
+}
+
+
+void
+update_settings(const char *event_name, bundle *settings, void *data){
+	app_data_s *ad = (app_data_s*)data;
+	int err;
+	int *error;
+	int *logging;
+	size_t b_size;
+	//bool init_flag;
+
+	if (ad->settings == NULL) {
+
+		//init_flag = true;
+		ad->settings = bundle_dup(settings);
+		//dlog_print(DLOG_INFO, LOG_TAG, "starting GUI");
+		create_base_gui(ad); // do this here once settings are created
+
+		update_settings_user(RAPROTO_SETTING_DEVICE_ID, ad);
+		update_settings_user(RAPROTO_SETTING_MQTT_BROKER, ad);
+		update_settings_user(RAPROTO_SETTING_MQTT_USERNAME, ad);
+		update_settings_user(RAPROTO_SETTING_MQTT_PASSWORD, ad);
+		update_settings_user(RAPROTO_SETTING_MQTT_CONFIG_PUB_TOPIC, ad);
+		update_settings_user(RAPROTO_SETTING_MQTT_CONFIG_SUB_TOPIC, ad);
+	} else {
+		//init_flag = false;
+
+		//TODO: Delete me -- for testing only (next line).
+		if (ad->frame_config.gl != NULL) update_frame(ad->frame_config.gl, NUM_OF_CONFIG_MENU_ITEMS);
+
+		if ((err = bundle_free(ad->settings)) != BUNDLE_ERROR_NONE) error_msg(err, __func__, "bundle free");
+		ad->settings = bundle_dup(settings);
+	}
+
+	if ((err = bundle_get_byte(ad->settings, RAPROTO_SETTING_ERROR, (void**)&error, &b_size)) != BUNDLE_ERROR_NONE) error_msg(err, __func__, "get error byte");
+	if ((err = bundle_get_byte(ad->settings, RAPROTO_SETTING_LOGGING, (void**)&logging, &b_size)) != BUNDLE_ERROR_NONE) error_msg(err, __func__, "get logging byte");
+
+	switch(*error) {
+		case (RAPROTO_SETTING_ERROR_TRUE):
+			ad->service.error = true;
+			break;
+		case (RAPROTO_SETTING_ERROR_FALSE):
+			ad->service.error = false;
+			break;
+		default:
+			error_msg(BUNDLE_ERROR_INVALID_PARAMETER, __func__, "unknown error byte");
+	}
+
+	switch(*logging){
+		case (RAPROTO_SETTING_LOGGING_TRUE):
+			ad->service.logging = true;
+			break;
+		case (RAPROTO_SETTING_LOGGING_FALSE):
+			ad->service.logging = false;
+			break;
+		default:
+			error_msg(BUNDLE_ERROR_INVALID_PARAMETER, __func__, "unknown logging byte");
+	}
+
+	if (ad->frame_main.gl != NULL) update_frame(ad->frame_main.gl, NUM_OF_MAIN_MENU_ITEMS);
+	if (ad->frame_settings.gl != NULL) update_frame(ad->frame_settings.gl, NUM_OF_SETTINGS_MENU_ITEMS);
+	if (ad->frame_about.gl != NULL) update_frame(ad->frame_about.gl, NUM_OF_ABOUT_MENU_ITEMS);
+	if (ad->frame_mqtt.gl != NULL) update_frame(ad->frame_mqtt.gl, NUM_OF_MQTT_MENU_ITEMS);
+	if (ad->frame_config.gl != NULL) update_frame(ad->frame_config.gl, NUM_OF_CONFIG_MENU_ITEMS);
+	update_theme(ad);
+
+	dlog_print(DLOG_INFO, LOG_TAG, "settings updated");
+}
+
+
 
 
 static void
@@ -73,11 +156,13 @@ update_frame(Evas_Object *gl, int num_entries) {
 
 	Elm_Object_Item *it;
 
-	for (int j = 0; j <= num_entries; j++) {
+	for (int j = 0; j < num_entries; j++) {
+		//dlog_print(DLOG_ERROR, LOG_TAG, "start %d",j);
 		it = elm_genlist_nth_item_get(gl, j);
-		elm_genlist_item_update(it);
+		elm_genlist_item_update(it); //TODO: THIS IS WHAT IS BROKEN.
+		//elm_genlist_item_fields_update(it);
+		//dlog_print(DLOG_ERROR, LOG_TAG, "finished %d",j);
 	}
-
 }
 
 
@@ -193,17 +278,17 @@ get_genlist_item_2text(Evas_Object *obj, const char *text, const char *subtext){
 	evas_object_size_hint_weight_set(box, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
 	evas_object_size_hint_align_set(box, EVAS_HINT_FILL, EVAS_HINT_FILL);
 	evas_object_show(box);
-	elm_object_content_set(bg, box);
+	elm_object_part_content_set(bg, NULL, box);
 
 	Evas_Object *label = elm_label_add(box);
 	snprintf(str, MAX_STRING_SIZE+MAX_MARKUP_SIZE, "%s%s", font_markup_main, text);
-	elm_object_text_set(label, str);
+	elm_object_part_text_set(label, NULL, str);
 	evas_object_show(label);
 	elm_box_pack_end(box, label);
 
 	Evas_Object *sublabel = elm_label_add(box);
 	snprintf(str, MAX_STRING_SIZE+MAX_MARKUP_SIZE, "%s%s", font_markup_sub, subtext);
-	elm_object_text_set(sublabel, str);
+	elm_object_part_text_set(sublabel, NULL, str);
 	evas_object_show(sublabel);
 	elm_box_pack_end(box, sublabel);
 
@@ -318,9 +403,7 @@ create_frame(frame_data_s *frame, menu_data_s *md, app_data_s *ad){
 	list_item_data_s *lid;
 
 	/* Elm_Genlist_Item_Class for title, on/off, list, padding */
-	Elm_Genlist_Item_Class *ttc = elm_genlist_item_class_new();
-	Elm_Genlist_Item_Class *itc = elm_genlist_item_class_new();
-	Elm_Genlist_Item_Class *ptc = elm_genlist_item_class_new();
+
 
 	frame->bg = elm_bg_add(ad->nf);
 
@@ -345,21 +428,23 @@ create_frame(frame_data_s *frame, menu_data_s *md, app_data_s *ad){
 	eext_circle_object_genlist_scroller_policy_set(circle_genlist, ELM_SCROLLER_POLICY_OFF, ELM_SCROLLER_POLICY_AUTO);
 	eext_rotary_object_event_activated_set(circle_genlist, EINA_TRUE);
 
-
+	Elm_Genlist_Item_Class *ttc = elm_genlist_item_class_new();
 	ttc->item_style = "title";
 	ttc->func.text_get = md->title_text;
 	ttc->func.del = gl_del_cb;
 
+	Elm_Genlist_Item_Class *itc = elm_genlist_item_class_new();
 	itc->item_style = "full";
 	itc->func.content_get = md->item_content;
 	itc->func.del = gl_del_cb;
 
+	Elm_Genlist_Item_Class *ptc = elm_genlist_item_class_new();
 	ptc->item_style = "padding";
 
 	/* Append genlist item for title */
 	lid = calloc(1,sizeof(list_item_data_s));
 	lid->index = -1;
-	lid->settings = ad->settings;
+	lid->settings = &(ad->settings); // THIS COULD BE THE ISSUE ... in the old version it might not have been nulled
 	lid->service = &(ad->service);
 	elm_genlist_item_append(frame->gl, ttc, lid, NULL, ELM_GENLIST_ITEM_NONE, NULL, NULL);
 
@@ -368,7 +453,7 @@ create_frame(frame_data_s *frame, menu_data_s *md, app_data_s *ad){
 
 		lid = calloc(1,sizeof(list_item_data_s));
 		lid->index = idx;
-		lid->settings = ad->settings;
+		lid->settings = &(ad->settings);
 		lid->service = &(ad->service);
 
 		elm_genlist_item_append(frame->gl, itc, lid, NULL, ELM_GENLIST_ITEM_NONE, md->func[idx], ad);
@@ -383,7 +468,7 @@ create_frame(frame_data_s *frame, menu_data_s *md, app_data_s *ad){
 	elm_genlist_item_class_free(ptc);
 
 	evas_object_show(frame->gl);
-	elm_object_content_set(frame->bg, frame->gl);
+	elm_object_part_content_set(frame->bg, NULL, frame->gl);
 
 	return frame->bg;
 }

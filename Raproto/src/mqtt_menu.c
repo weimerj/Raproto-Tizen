@@ -33,11 +33,11 @@ get_mqtt_menu_content(void *data, Evas_Object *obj, const char *part)
 
 	switch (lid->index) {
 		case (MQTT_BROKER):
-			if ((err = bundle_get_str(lid->settings, RAPROTO_SETTING_MQTT_BROKER, &str)) != BUNDLE_ERROR_NONE) error_msg(err, __func__, "broker");
+			if ((err = bundle_get_str(*(lid->settings), RAPROTO_SETTING_MQTT_BROKER, &str)) != BUNDLE_ERROR_NONE) error_msg(err, __func__, "broker");
 			bg = get_genlist_item_2text(obj,"Broker Address", str);
 			break;
 		case (MQTT_USERNAME):
-			if ((err = bundle_get_str(lid->settings, RAPROTO_SETTING_MQTT_USERNAME, &str)) != BUNDLE_ERROR_NONE) error_msg(err, __func__, "username");
+			if ((err = bundle_get_str(*(lid->settings), RAPROTO_SETTING_MQTT_USERNAME, &str)) != BUNDLE_ERROR_NONE) error_msg(err, __func__, "username");
 			bg = get_genlist_item_2text(obj,"Username", str);
 			break;
 		case (MQTT_PASSWORD):
